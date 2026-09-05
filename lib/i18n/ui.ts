@@ -9,9 +9,11 @@ import type { Locale } from './index';
  */
 const cs = {
   brand: 'Audit webu',
-  metaTitle: 'Audit webu — Rychlost, SEO, AEO, GEO',
+  metaTitle: 'Audit webu zdarma — rychlost, SEO, AEO a GEO | Semakod',
   metaDescription:
-    'Vložte URL a během chvíle získáte pravidly řízený audit rychlosti, SEO, připravenosti na AI odpovědi a technického stavu webu.',
+    'Online kontrola webu zdarma a bez registrace. Vložte adresu a do dvou minut máte 35 měřených ' +
+    'kontrol: Core Web Vitals, SEO, připravenost na odpovědi AI a technický stav — s konkrétními ' +
+    'doporučeními a exportem do PDF.',
 
   nav: {
     aria: 'Hlavní navigace',
@@ -48,8 +50,12 @@ const cs = {
 
   hero: {
     chip: 'Bez registrace · výsledek do dvou minut',
-    titleBefore: 'Zjistěte, jak váš web vidí Google ',
-    titleAccent: 'i umělá inteligence',
+    // Nadpis je poskládaný ze tří kusů, protože se každý vykresluje jinak:
+    // začátek běžnou barvou textu, „Google“ barvami Googlu, konec přechodem.
+    titleBefore: 'Zjistěte, jak váš web vidí ',
+    // Nezlomitelná mezera za „i“: jednopísmenná spojka nesmí zůstat na konci řádku.
+    titleBetween: ' i\u00a0',
+    titleAccent: 'umělá inteligence',
     lead:
       'Vložte adresu a nástroj projde přes třicet konkrétních kontrol — od Core Web Vitals přes ' +
       'strukturovaná data až po pravidla pro AI boty. Žádné obecné rady od jazykového modelu, ' +
@@ -400,10 +406,16 @@ const cs = {
       'Pravidly řízený audit rychlosti, SEO, AEO, GEO a technického stavu. Všechna doporučení jsou ' +
       'předem napsaná a navázaná na konkrétní kontrolu — nic negeneruje jazykový model.',
     facts: {
-      // Kompletní audit má 35 kontrol (SEO 12, AEO 6, GEO 4, Správnost 4,
-      // rychlost 5 na mobilu a 4 na počítači) a o dvě víc, když Chrome UX
-      // Report zná reálné INP — pak přibude TBT jako samostatný řádek.
-      checks: { label: 'Kontrol', value: '30+' },
+      audits: {
+        label: 'Auditů',
+        hint: 'Skutečný počet dokončených auditů, zaokrouhlený dolů.',
+      },
+      people: {
+        label: 'Lidí',
+        hint:
+          'Kolik různých návštěvníků audit spustilo. Odhad z jednosměrného otisku, ' +
+          'který se nikde neukládá.',
+      },
       categories: {
         label: 'Kategorií',
         hint:
@@ -416,10 +428,6 @@ const cs = {
     sources: 'Zdroje dat',
     links: 'Odkazy',
     services: 'Služby Semakod',
-    runs: {
-      label: 'Spuštěných auditů',
-      hint: 'Skutečný počet běhů, zaokrouhlený dolů.',
-    },
     noteLeft: 'Audit se počítá při každém požadavku znovu a nikam se neukládá.',
     noteRight: 'Měřeno pro mobil i pro počítač · data z Googlu se mohou mezi běhy lišit.',
     credit: 'Vytvořil a provozuje Semakod',
@@ -555,8 +563,10 @@ const cs = {
           text:
             'Žádné reklamní ani profilovací cookies, žádné sledování napříč weby, žádný prodej ani ' +
             'předávání údajů dalším stranám. Samotný audit se nikam neukládá: počítá se při každém ' +
-            'požadavku znovu a po odeslání odpovědi z paměti mizí. Vedeme jen anonymní počítadlo ' +
-            'spuštěných auditů, které neobsahuje ani auditované adresy, ani nic o návštěvníkovi.',
+            'požadavku znovu a po odeslání odpovědi z paměti mizí. Vedeme jen dvě anonymní čísla — ' +
+            'kolik auditů proběhlo a kolik různých lidí je spustilo. To druhé se počítá z jednosměrného ' +
+            'otisku IP adresy a prohlížeče, který se nikde neukládá: do počítadla jde jen ' +
+            'pravděpodobnostní náčrt, ze kterého nejde zpětně přečíst vůbec nic.',
         },
         {
           title: 'Vaše práva',
@@ -589,9 +599,11 @@ export type UiDict = typeof cs;
 
 const en: UiDict = {
   brand: 'Site Audit',
-  metaTitle: 'Site Audit — Speed, SEO, AEO, GEO',
+  metaTitle: 'Free site audit — speed, SEO, AEO and GEO | Semakod',
   metaDescription:
-    'Enter a URL and get a rule-driven audit of speed, SEO, readiness for AI answers and technical health within a minute.',
+    'A free website check with no sign-up. Enter an address and within two minutes you get 35 measured ' +
+    'checks: Core Web Vitals, SEO, readiness for AI answers and technical health — with concrete ' +
+    'recommendations and a PDF export.',
 
   nav: {
     aria: 'Main navigation',
@@ -628,8 +640,9 @@ const en: UiDict = {
 
   hero: {
     chip: 'No sign-up · results within two minutes',
-    titleBefore: 'See how your site looks to Google ',
-    titleAccent: 'and to AI',
+    titleBefore: 'See how your site looks to ',
+    titleBetween: ' and\u00a0to ',
+    titleAccent: 'AI',
     lead:
       'Enter an address and the tool runs more than thirty concrete checks — from Core Web Vitals ' +
       'through structured data to AI bot rules. No generic advice from a language model, just ' +
@@ -979,7 +992,16 @@ const en: UiDict = {
       'A rule-driven audit of speed, SEO, AEO, GEO and technical health. Every recommendation is ' +
       'pre-written and tied to a specific check — nothing is generated by a language model.',
     facts: {
-      checks: { label: 'Checks', value: '30+' },
+      audits: {
+        label: 'Audits',
+        hint: 'The real number of completed audits, rounded down.',
+      },
+      people: {
+        label: 'People',
+        hint:
+          'How many different visitors have run an audit. Estimated from a one-way fingerprint ' +
+          'that is never stored.',
+      },
       categories: {
         label: 'Categories',
         hint:
@@ -992,10 +1014,6 @@ const en: UiDict = {
     sources: 'Data sources',
     links: 'Links',
     services: 'Semakod services',
-    runs: {
-      label: 'Audits run',
-      hint: 'The real number of runs, rounded down.',
-    },
     noteLeft: 'The audit is recomputed on every request and nothing is stored.',
     noteRight: 'Measured for mobile and desktop · Google’s data can differ between runs.',
     credit: 'Built and run by Semakod',
@@ -1132,8 +1150,10 @@ const en: UiDict = {
           text:
             'No advertising or profiling cookies, no cross-site tracking, no selling or passing data on to ' +
             'third parties. The audit itself is never stored: it is recomputed on every request and leaves ' +
-            'memory once the response is sent. We keep only an anonymous counter of audit runs, which ' +
-            'holds neither the audited addresses nor anything about the visitor.',
+            'memory once the response is sent. We keep just two anonymous numbers — how many audits have ' +
+            'run and how many different people have run them. The second comes from a one-way fingerprint ' +
+            'of the IP address and browser that is never stored: only a probabilistic sketch reaches the ' +
+            'counter, and nothing at all can be read back out of it.',
         },
         {
           title: 'Your rights',

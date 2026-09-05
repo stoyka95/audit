@@ -10,6 +10,7 @@ import SiteFooter from '@/components/SiteFooter';
 import SectionHeading from '@/components/SectionHeading';
 import Reveal from '@/components/Reveal';
 import Faq from '@/components/Faq';
+import GoogleWord from '@/components/GoogleWord';
 import FaqJsonLd from '@/components/FaqJsonLd';
 import { useLocale } from '@/components/LocaleProvider';
 import { applyBlockerCap, auditConfidence, overallScore, unscoredNote } from '@/lib/scoring';
@@ -436,6 +437,8 @@ export default function Home() {
                 </span>
                 <h1 className="mx-auto mt-6 max-w-3xl font-display text-[2.6rem] font-semibold leading-[1.02] tracking-tightest text-bone text-balance sm:text-6xl lg:text-[4.1rem]">
                   {t.hero.titleBefore}
+                  <GoogleWord />
+                  {t.hero.titleBetween}
                   <span className="brand-text">{t.hero.titleAccent}</span>.
                 </h1>
                 <p className="mx-auto mt-5 max-w-xl text-[0.95rem] leading-relaxed text-bone-dim text-balance">

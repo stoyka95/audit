@@ -19,22 +19,34 @@ const outfit = Outfit({
 });
 
 const SITE_URL = 'https://audit.semakod.cz';
-const SITE_TITLE = 'Audit webu — Rychlost, SEO, AEO, GEO | Semakod';
+const SITE_TITLE = 'Audit webu zdarma — rychlost, SEO, AEO a GEO | Semakod';
 const SITE_DESCRIPTION =
-  'Vložte URL a během chvíle získáte pravidly řízený audit rychlosti, SEO, připravenosti na AI odpovědi a technického stavu webu. Zdarma, bez registrace.';
+  'Online kontrola webu zdarma a bez registrace. Vložte adresu a do dvou minut máte 35 měřených ' +
+  'kontrol: Core Web Vitals, SEO, připravenost na odpovědi AI a technický stav — s konkrétními ' +
+  'doporučeními a exportem do PDF.';
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: { default: SITE_TITLE, template: '%s | Audit webu' },
   description: SITE_DESCRIPTION,
+  /**
+   * Google keywords dávno neváží, ale ostatní vyhledávače a hlavně jazykové
+   * modely tenhle seznam čtou jako rychlý popis oboru. Proto jsou tu skutečné
+   * fráze, které lidé hledají, ne slovníkové jednoslovné termíny.
+   */
   keywords: [
-    'audit webu',
-    'SEO audit',
+    'audit webu zdarma',
+    'kontrola webu zdarma',
+    'analýza webu online',
+    'SEO audit zdarma',
+    'test rychlosti webu',
+    'kontrola SEO online',
     'AEO audit',
     'GEO audit',
-    'Core Web Vitals',
-    'PageSpeed Insights',
-    'kontrola webu zdarma',
+    'optimalizace pro AI vyhledávání',
+    'Core Web Vitals test',
+    'PageSpeed Insights česky',
+    'audit webových stránek',
     'Semakod',
   ],
   authors: [{ name: 'Mykola Stoyka', url: 'https://semakod.cz' }],
@@ -44,6 +56,23 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
     googleBot: { index: true, follow: true, 'max-image-preview': 'large' },
+  },
+  /**
+   * Ikony vedou na statické soubory s neměnnou adresou. Dřív je generovala
+   * trasa /icon o velikosti 32 px — jenže Google pro favicon ve výsledcích
+   * hledání vyžaduje čtverec v násobku 48 px, takže místo ikony ukazoval
+   * obecný glóbus. Stabilní adresa navíc přežije nasazení, takže se ikona
+   * nemusí pokaždé znovu procházet.
+   */
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: '16x16 32x32 48x48' },
+      { url: '/icon-48.png', type: 'image/png', sizes: '48x48' },
+      { url: '/icon.png', type: 'image/png', sizes: '96x96' },
+      { url: '/icon-192.png', type: 'image/png', sizes: '192x192' },
+    ],
+    shortcut: '/favicon.ico',
+    apple: '/apple-icon',
   },
   alternates: {
     canonical: '/',
@@ -87,13 +116,19 @@ document.documentElement.setAttribute('data-theme',t);
 /**
  * Jazyk se řeší stejně jako motiv, a ze stejného důvodu: server neví, co má
  * návštěvník nastavené, takže by React musel jazyk přepnout až po hydrataci a
- * stránka by na okamžik problikla v češtině. Pořadí: adresa (?lang=), uložená
- * volba, jazyk prohlížeče.
+ * stránka by na okamžik problikla v jiné řeči. Pořadí: adresa (?lang=), pak
+ * uložená volba.
+ *
+ * Podle jazyka prohlížeče se schválně neřídí. Googlebot prochází web
+ * s anglickým nastavením, takže se mu stránka přepnula do angličtiny a do
+ * výsledků hledání se na české adrese dostal anglický titulek i popisek —
+ * přestože kanonická verze i `x-default` míří na češtinu. Angličtinu si
+ * návštěvník zapne přepínačem a volba mu zůstane.
  */
 const LOCALE_BOOTSTRAP = `(function(){try{
 var q=new URLSearchParams(location.search).get('lang');
 var s=q||localStorage.getItem('locale');
-if(s!=='cs'&&s!=='en'){s=(navigator.language||'cs').toLowerCase().indexOf('cs')===0?'cs':'en';}
+if(s!=='cs'&&s!=='en'){s='cs';}
 document.documentElement.setAttribute('lang',s);
 if(q==='cs'||q==='en')localStorage.setItem('locale',q);
 }catch(e){document.documentElement.setAttribute('lang','cs');}})();`;

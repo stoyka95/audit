@@ -140,21 +140,28 @@ souhlasu. Volba se ukládá jako `{"v":1,"analytics":bool,"at":ISO}` a platí dv
 pak se lišta objeví znovu. Starší tvar (`"accepted"` / `"rejected"`) se načte a převede.
 Změnit volbu jde kdykoli odkazem **Nastavení cookies** v patičce, který otevře totéž okno.
 
-## Počítadlo spuštěných auditů
+## Počítadla v patičce
 
-Patička ukazuje, kolik auditů nástroj skutečně odbavil, zaokrouhleno dolů na hladiny
+Patička ukazuje dvě reálná čísla — kolik auditů proběhlo a kolik různých lidí je spustilo —
+zaokrouhlená dolů na hladiny
 `10+ · 20+ · 30+ · 50+ · 100+ · 200+ · 500+ · 1000+ · 5000+ · 10000+ · 20000+ · 50000+ · 100000+`.
-Zvyšuje se jen za dokončený audit, neobsahuje auditované adresy ani nic o návštěvníkovi
-a čte se z `GET /api/stats`.
+Obojí se zvyšuje jen za dokončený audit a čte se z `GET /api/stats`.
+
+Lidé se počítají bez cookies a bez databáze návštěvníků: z IP adresy a hlavičky prohlížeče
+vznikne jednosměrný otisk (SHA-256, volitelně se solí z `VISITOR_SALT`), který se nikam
+neukládá — jde rovnou do Redisového HyperLogLogu. Ten si z něj nechá jen pár bitů, takže
+umí odhadnout počet různých hodnot s chybou kolem procenta, ale žádnou z nich nelze přečíst
+zpátky. Pro číslo, které se stejně zaokrouhluje na „500+", je to přesnost víc než dostatečná.
 
 Úložištěm je Redis přes REST — funguje Vercel KV i Upstash, obojí mluví stejným protokolem:
 
 ```
 KV_REST_API_URL=…        # nebo UPSTASH_REDIS_REST_URL
 KV_REST_API_TOKEN=…      # nebo UPSTASH_REDIS_REST_TOKEN
+VISITOR_SALT=…           # volitelné, sůl do otisku návštěvníka
 ```
 
-Bez těchto proměnných se počítá jen v paměti instance a patička číslo **vůbec neukáže** —
+Bez těchto proměnných se počítá jen v paměti instance a patička čísla **vůbec neukáže** —
 zaokrouhlený odhad by byl tvrzení, za kterým nic nestojí. Selhání zápisu audit neshodí.
 
 ## Export do PDF
@@ -189,7 +196,7 @@ lib/
   checks/                    pět modulů s kontrolami, každý vrací CheckResult[]
   i18n/                      Locale, přepínač textů kontrol, slovník rozhraní
   http.ts robots.ts jsonld.ts pagespeed.ts url.ts scoring.ts format.ts log.ts types.ts
-  counter.ts                 počítadlo auditů (Redis přes REST) a zaokrouhlení na hladiny
+  counter.ts                 počítadla auditů a návštěvníků (Redis přes REST) a zaokrouhlení
   reportHtml.ts              samostatný tiskový dokument reportu pro export do PDF
 components/
   SiteNav ThemeToggle LanguageToggle LocaleProvider SiteFooter SectionHeading CookieConsent

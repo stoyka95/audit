@@ -7,8 +7,9 @@ import { useLocale } from './LocaleProvider';
 import { CATEGORY_WEIGHT } from '@/lib/scoring';
 
 interface StatsResponse {
-  /** Už zaokrouhlený počet („500+"), nebo null, když se počítadlo nevede. */
-  display: string | null;
+  /** Už zaokrouhlené počty („500+"), nebo null, když se počítadla nevedou. */
+  audits: string | null;
+  people: string | null;
   persistent: boolean;
 }
 
@@ -24,11 +25,14 @@ export default function SiteFooter() {
   const { t } = useLocale();
 
   /**
-   * Počet spuštěných auditů. Dokud odpověď nedorazí — nebo když počítadlo nemá
-   * kam zapisovat — se dlaždice vůbec nevykreslí. Radši méně čísel než číslo,
-   * za kterým nic není.
+   * Kolik auditů proběhlo a kolik lidí je spustilo. Dokud odpověď nedorazí —
+   * nebo když počítadla nemají kam zapisovat — se dlaždice vůbec nevykreslí.
+   * Radši méně čísel než číslo, za kterým nic není.
    */
-  const [runs, setRuns] = useState<string | null>(null);
+  const [stats, setStats] = useState<{ audits: string | null; people: string | null }>({
+    audits: null,
+    people: null,
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -36,7 +40,7 @@ export default function SiteFooter() {
     fetch('/api/stats')
       .then((response) => (response.ok ? (response.json() as Promise<StatsResponse>) : null))
       .then((payload) => {
-        if (!cancelled && payload?.display) setRuns(payload.display);
+        if (!cancelled && payload) setStats({ audits: payload.audits, people: payload.people });
       })
       .catch(() => {
         // Patička kvůli statistice nikoho neobtěžuje chybovou hláškou.
@@ -48,13 +52,18 @@ export default function SiteFooter() {
   }, []);
 
   /**
-   * Čísla o nástroji. Počet kategorií se bere z tabulky vah, ne z ruky —
-   * kdyby nějaká přibyla nebo zmizela, dlaždice se opraví sama a nezůstane
-   * v patičce viset číslo, které už neplatí.
+   * Čísla o nástroji. První dvě dlaždice jsou živé počty z provozu, počet
+   * kategorií se bere z tabulky vah, ne z ruky — kdyby nějaká přibyla nebo
+   * zmizela, dlaždice se opraví sama a nezůstane v patičce viset číslo,
+   * které už neplatí.
    */
   const facts: { label: string; value: string; hint?: string }[] = [
-    ...(runs ? [{ label: t.footer.runs.label, value: runs, hint: t.footer.runs.hint }] : []),
-    t.footer.facts.checks,
+    ...(stats.audits
+      ? [{ label: t.footer.facts.audits.label, value: stats.audits, hint: t.footer.facts.audits.hint }]
+      : []),
+    ...(stats.people
+      ? [{ label: t.footer.facts.people.label, value: stats.people, hint: t.footer.facts.people.hint }]
+      : []),
     {
       label: t.footer.facts.categories.label,
       value: String(Object.keys(CATEGORY_WEIGHT).length),

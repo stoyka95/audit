@@ -5,14 +5,16 @@ export default function manifest(): MetadataRoute.Manifest {
     name: 'Audit webu — Semakod',
     short_name: 'Audit webu',
     description:
-      'Pravidly řízený audit rychlosti, SEO, AEO, GEO a technického stavu webu. Zdarma, bez registrace.',
+      'Audit webu zdarma: rychlost, SEO, AEO, GEO a technický stav. Bez registrace, výsledek do dvou minut.',
     start_url: '/',
     display: 'standalone',
     background_color: '#08080a',
     theme_color: '#08080a',
     lang: 'cs',
     icons: [
-      { src: '/icon', sizes: '32x32', type: 'image/png' },
+      { src: '/icon-48.png', sizes: '48x48', type: 'image/png' },
+      { src: '/icon.png', sizes: '96x96', type: 'image/png' },
+      { src: '/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
       { src: '/apple-icon', sizes: '180x180', type: 'image/png' },
     ],
   };

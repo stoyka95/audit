@@ -7,7 +7,7 @@ import { extractJsonLd } from '@/lib/jsonld';
 import { pendingPageSpeed } from '@/lib/pagespeed';
 import { normalizeUrl, resolveUrl, sameRegistrableHost } from '@/lib/url';
 import { logEvent } from '@/lib/log';
-import { bumpAuditRuns } from '@/lib/counter';
+import { bumpAuditRuns, bumpVisitor, visitorFingerprint } from '@/lib/counter';
 import { LOCALES, normalizeLocale, translator, type Locale } from '@/lib/i18n';
 import {
   applyBlockerCap,
@@ -320,10 +320,17 @@ export async function POST(request: Request) {
     byLocale,
   };
 
-  // Počítadlo běhů pro patičku. Zvyšuje se až tady, tedy jen za dokončený
-  // audit — neplatná adresa ani nedostupná stránka se nepočítá. Selhání zápisu
-  // se ignoruje, report je důležitější než statistika.
-  await bumpAuditRuns().catch(() => 0);
+  // Počítadla pro patičku. Zvyšují se až tady, tedy jen za dokončený audit —
+  // neplatná adresa ani nedostupná stránka se nepočítá. Selhání zápisu se
+  // ignoruje, report je důležitější než statistika.
+  //
+  // Otisk návštěvníka vzniká z IP adresy a hlavičky prohlížeče, nikam se
+  // neukládá a slouží jen k tomu, aby se stejný člověk nezapočítal podruhé.
+  const fingerprint = visitorFingerprint(
+    request.headers.get('x-forwarded-for'),
+    request.headers.get('user-agent'),
+  );
+  await Promise.allSettled([bumpAuditRuns(), bumpVisitor(fingerprint)]);
 
   logEvent('audit', {
     url: target,

@@ -1,5 +1,8 @@
+import { createHash } from 'node:crypto';
+
 /**
- * Počítadlo skutečně spuštěných auditů.
+ * Dvě počítadla, která pohánějí čísla v patičce: kolik auditů doběhlo a kolik
+ * různých lidí je spustilo.
  *
  * V patičce se ukazuje jen zaokrouhlená hodnota, ale zaokrouhluje se reálné
  * číslo — nic se tu nevymýšlí ani nenafukuje. Když počítadlo nemá kam zapisovat,
@@ -11,13 +14,14 @@
  * dost a v produkci se to pozná: `persistent: false`.
  */
 
-const KEY = 'audit:runs';
+const RUNS_KEY = 'audit:runs';
+const PEOPLE_KEY = 'audit:people';
 
-/** Hladiny, na které se počet zaokrouhluje směrem dolů. */
+/** Hladiny, na které se počty zaokrouhlují směrem dolů. */
 const STEPS = [10, 20, 30, 50, 100, 200, 500, 1000, 5000, 10000, 20000, 50000, 100000];
 
-/** Počítadlo pro běh bez úložiště. Přežije jen do uspání instance. */
-let memory = 0;
+/** Náhrada úložiště pro běh bez Redisu. Přežije jen do uspání instance. */
+const memory = { runs: 0, people: new Set<string>() };
 
 interface KvConfig {
   url: string;
@@ -57,29 +61,63 @@ async function command(config: KvConfig, path: string): Promise<number | null> {
   }
 }
 
-/** Zvýší počítadlo o jedna a vrátí nový stav. Selhání zápisu audit neshodí. */
-export async function bumpAuditRuns(): Promise<number> {
+/**
+ * Jednosměrný otisk návštěvníka z IP adresy a hlavičky prohlížeče.
+ *
+ * Otisk nikam neputuje a nikde se neukládá — slouží jen jako vstup do
+ * pravděpodobnostního počítadla níž, které si z něj nechá pár bitů a samotnou
+ * hodnotu zahodí. Zpětně z něj tedy nejde zjistit ani IP adresa, ani nic jiného.
+ * Sůl navíc rozbíjí možnost porovnávat otisky mezi provozy, když je nastavená.
+ */
+export function visitorFingerprint(ip: string | null, userAgent: string | null): string {
+  const salt = process.env.VISITOR_SALT ?? 'audit.semakod.cz';
+  return createHash('sha256').update(`${salt}|${ip ?? ''}|${userAgent ?? ''}`).digest('hex').slice(0, 32);
+}
+
+/** Zvýší počet doběhlých auditů. Selhání zápisu audit neshodí. */
+export async function bumpAuditRuns(): Promise<void> {
   const config = kvConfig();
   if (!config) {
-    memory += 1;
-    return memory;
+    memory.runs += 1;
+    return;
   }
-  const value = await command(config, `incr/${KEY}`);
-  return value ?? 0;
+  await command(config, `incr/${RUNS_KEY}`);
+}
+
+/**
+ * Přidá návštěvníka mezi započítané.
+ *
+ * Redis na to má HyperLogLog: místo seznamu otisků drží jen dvanáctikilobajtový
+ * náčrt, ze kterého se dá odhadnout počet různých hodnot s chybou kolem procenta,
+ * ale ne přečíst jediná z nich. Pro číslo, které se stejně zaokrouhluje na
+ * „500+", je to přesnost víc než dostatečná — a nejde o databázi návštěvníků.
+ */
+export async function bumpVisitor(fingerprint: string): Promise<void> {
+  const config = kvConfig();
+  if (!config) {
+    memory.people.add(fingerprint);
+    return;
+  }
+  await command(config, `pfadd/${PEOPLE_KEY}/${encodeURIComponent(fingerprint)}`);
 }
 
 export async function readAuditRuns(): Promise<number> {
   const config = kvConfig();
-  if (!config) return memory;
-  const value = await command(config, `get/${KEY}`);
-  return value ?? 0;
+  if (!config) return memory.runs;
+  return (await command(config, `get/${RUNS_KEY}`)) ?? 0;
+}
+
+export async function readVisitors(): Promise<number> {
+  const config = kvConfig();
+  if (!config) return memory.people.size;
+  return (await command(config, `pfcount/${PEOPLE_KEY}`)) ?? 0;
 }
 
 /**
- * Zaokrouhlení dolů na nejbližší hladinu. Pod deset auditů se ukazuje přesné
- * číslo — „10+" u sedmi běhů by bylo tvrzení navíc.
+ * Zaokrouhlení dolů na nejbližší hladinu. Pod deset se ukazuje přesné číslo —
+ * „10+" u sedmi auditů by bylo tvrzení navíc.
  */
-export function roundRuns(total: number): string | null {
+export function roundCount(total: number): string | null {
   if (!Number.isFinite(total) || total <= 0) return null;
 
   let step: number | null = null;

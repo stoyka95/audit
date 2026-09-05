@@ -1,25 +1,30 @@
 import { NextResponse } from 'next/server';
 
-import { counterIsPersistent, readAuditRuns, roundRuns } from '@/lib/counter';
+import { counterIsPersistent, readAuditRuns, readVisitors, roundCount } from '@/lib/counter';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 /**
- * Počet spuštěných auditů pro patičku.
+ * Čísla pro patičku: kolik auditů doběhlo a kolik různých lidí je spustilo.
  *
- * `display` je už zaokrouhlené — zaokrouhlovat až v prohlížeči by znamenalo
- * posílat ven přesné číslo, které nikdo nepotřebuje. `persistent: false` říká
- * patičce, že počítadlo nemá trvalé úložiště a číslo se nemá ukazovat vůbec.
+ * Obojí odchází ven už zaokrouhlené — zaokrouhlovat až v prohlížeči by znamenalo
+ * posílat přesná čísla, která nikdo nepotřebuje. `persistent: false` říká patičce,
+ * že počítadla nemají trvalé úložiště a nemá se ukazovat nic.
  */
 export async function GET() {
   const persistent = counterIsPersistent();
-  const total = persistent ? await readAuditRuns() : 0;
+
+  if (!persistent) {
+    return NextResponse.json({ audits: null, people: null, persistent });
+  }
+
+  const [runs, visitors] = await Promise.all([readAuditRuns(), readVisitors()]);
 
   return NextResponse.json(
-    { display: persistent ? roundRuns(total) : null, persistent },
+    { audits: roundCount(runs), people: roundCount(visitors), persistent },
     // Patička není ciferník: pár minut staré číslo je v pořádku a ušetří to
-    // jedno čtení z úložiště na každé načtení stránky.
+    // dvě čtení z úložiště na každé načtení stránky.
     { headers: { 'cache-control': 'public, s-maxage=120, stale-while-revalidate=600' } },
   );
 }
