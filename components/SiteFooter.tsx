@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { SECTION_IDS, sectionLabel } from './SiteNav';
 import BrandLogo from './BrandLogo';
 import { useLocale } from './LocaleProvider';
+import { CATEGORY_WEIGHT } from '@/lib/scoring';
 
 interface StatsResponse {
   /** Už zaokrouhlený počet („500+"), nebo null, když se počítadlo nevede. */
@@ -46,9 +47,20 @@ export default function SiteFooter() {
     };
   }, []);
 
-  const facts = [
+  /**
+   * Čísla o nástroji. Počet kategorií se bere z tabulky vah, ne z ruky —
+   * kdyby nějaká přibyla nebo zmizela, dlaždice se opraví sama a nezůstane
+   * v patičce viset číslo, které už neplatí.
+   */
+  const facts: { label: string; value: string; hint?: string }[] = [
     ...(runs ? [{ label: t.footer.runs.label, value: runs, hint: t.footer.runs.hint }] : []),
-    ...t.footer.facts.map((fact) => ({ ...fact, hint: undefined as string | undefined })),
+    t.footer.facts.checks,
+    {
+      label: t.footer.facts.categories.label,
+      value: String(Object.keys(CATEGORY_WEIGHT).length),
+      hint: t.footer.facts.categories.hint,
+    },
+    t.footer.facts.stored,
   ];
 
   return (
@@ -68,7 +80,9 @@ export default function SiteFooter() {
             <dl className="mt-6 grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4 lg:grid-cols-2">
               {facts.map((fact) => (
                 <div key={fact.label} title={fact.hint}>
-                  <dt className="text-[0.65rem] uppercase leading-tight tracking-[0.16em] text-bone-faint">
+                  {/* Pevná výška popisku: „Spuštěných auditů" se do sloupce nevejde
+                      na řádek a bez ní by jeho číslo kleslo pod sousední. */}
+                  <dt className="flex min-h-[2.1em] items-start text-[0.65rem] uppercase leading-tight tracking-[0.16em] text-bone-faint">
                     {fact.label}
                   </dt>
                   <dd className="mt-1 font-display text-xl font-semibold tracking-tight text-bone tnum">
