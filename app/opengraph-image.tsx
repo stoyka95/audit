@@ -1,4 +1,5 @@
 import { ImageResponse } from 'next/og';
+import { BRAND_LOGO_DATA_URI } from '@/lib/brandLogo';
 
 export const runtime = 'edge';
 export const size = { width: 1200, height: 630 };
@@ -21,22 +22,8 @@ export default function OpengraphImage() {
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: 56,
-              height: 56,
-              borderRadius: 14,
-              background: 'linear-gradient(115deg, rgb(96,140,255), rgb(176,112,255))',
-              fontSize: 30,
-              fontWeight: 700,
-              color: '#fff',
-            }}
-          >
-            S
-          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={BRAND_LOGO_DATA_URI} width={48} height={48} alt="" />
           <div style={{ fontSize: 28, fontWeight: 600, letterSpacing: '-0.02em' }}>Audit webu</div>
         </div>
 

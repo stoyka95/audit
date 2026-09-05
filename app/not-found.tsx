@@ -1,5 +1,6 @@
 'use client';
 
+import BrandLogo from '@/components/BrandLogo';
 import { useLocale } from '@/components/LocaleProvider';
 
 export default function NotFound() {
@@ -7,10 +8,7 @@ export default function NotFound() {
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-2xl flex-col items-center justify-center px-4 py-20 text-center">
-      <span aria-hidden="true" className="relative flex h-14 w-14 items-center justify-center">
-        <span className="brand-fill absolute inset-0 rounded-2xl opacity-90" />
-        <span className="relative font-display text-xl font-bold leading-none text-white">S</span>
-      </span>
+      <BrandLogo className="h-14 w-14" />
 
       <p className="mt-8 font-display text-7xl font-semibold tracking-tightest text-bone sm:text-8xl">
         <span className="brand-text">{t.notFound.code}</span>

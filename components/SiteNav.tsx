@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import ThemeToggle from './ThemeToggle';
 import LanguageToggle from './LanguageToggle';
+import BrandLogo from './BrandLogo';
 import { useLocale } from './LocaleProvider';
 import type { UiDict } from '@/lib/i18n/ui';
 
@@ -35,10 +36,7 @@ export function sectionLabel(t: UiDict, id: SectionId): string {
 function Logo({ label, aria }: { label: string; aria: string }) {
   return (
     <a href="#audit" className="flex shrink-0 items-center gap-2.5" aria-label={aria}>
-      <span aria-hidden="true" className="relative flex h-7 w-7 items-center justify-center">
-        <span className="brand-fill absolute inset-0 rounded-[9px] opacity-90" />
-        <span className="relative font-display text-[0.72rem] font-bold leading-none text-white">S</span>
-      </span>
+      <BrandLogo className="h-7 w-7 shrink-0" />
       <span className="font-display text-[0.95rem] font-semibold tracking-tight text-bone">{label}</span>
     </a>
   );

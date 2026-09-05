@@ -1,6 +1,7 @@
 'use client';
 
 import { SECTION_IDS, sectionLabel } from './SiteNav';
+import BrandLogo from './BrandLogo';
 import { useLocale } from './LocaleProvider';
 
 export default function SiteFooter() {
@@ -12,10 +13,7 @@ export default function SiteFooter() {
         <div className="flex flex-col gap-8 sm:flex-row sm:items-start sm:justify-between">
           <div className="max-w-sm">
             <div className="flex items-center gap-2.5">
-              <span aria-hidden="true" className="relative flex h-7 w-7 items-center justify-center">
-                <span className="brand-fill absolute inset-0 rounded-[9px] opacity-90" />
-                <span className="relative font-display text-[0.72rem] font-bold leading-none text-white">S</span>
-              </span>
+              <BrandLogo className="h-7 w-7 shrink-0" />
               <span className="font-display text-[0.95rem] font-semibold tracking-tight text-bone">
                 {t.brand}
               </span>
@@ -71,9 +69,7 @@ export default function SiteFooter() {
               rel="noopener"
               className="inline-flex items-center gap-2 text-bone-dim transition-colors hover:text-bone"
             >
-              <span aria-hidden="true" className="brand-fill flex h-5 w-5 items-center justify-center rounded-[6px]">
-                <span className="font-display text-[0.55rem] font-bold leading-none text-white">S</span>
-              </span>
+              <BrandLogo className="h-5 w-5 shrink-0" />
               {t.footer.credit}
             </a>
             <p>{t.footer.copyright}</p>

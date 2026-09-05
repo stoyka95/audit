@@ -1,10 +1,10 @@
 import { ImageResponse } from 'next/og';
+import { BRAND_LOGO_DATA_URI } from '@/lib/brandLogo';
 
 export const runtime = 'edge';
 export const size = { width: 32, height: 32 };
 export const contentType = 'image/png';
 
-/** Favicon — stejný "S" monogram a přechod jako logo v navigaci. */
 export default function Icon() {
   return new ImageResponse(
     (
@@ -16,20 +16,11 @@ export default function Icon() {
           alignItems: 'center',
           justifyContent: 'center',
           borderRadius: 8,
-          background: 'linear-gradient(115deg, rgb(58,102,246), rgb(142,66,240))',
+          background: 'rgb(8,8,10)',
         }}
       >
-        <span
-          style={{
-            fontFamily: 'sans-serif',
-            fontSize: 20,
-            fontWeight: 700,
-            color: '#fff',
-            lineHeight: 1,
-          }}
-        >
-          S
-        </span>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={BRAND_LOGO_DATA_URI} width={24} height={24} alt="" />
       </div>
     ),
     { ...size },
