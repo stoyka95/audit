@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { DM_Sans, Outfit } from 'next/font/google';
+import { Analytics } from '@vercel/analytics/next';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import './globals.css';
 import LocaleProvider from '@/components/LocaleProvider';
 
@@ -146,6 +148,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <LocaleProvider>
           <div className="relative z-[2]">{children}</div>
         </LocaleProvider>
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
