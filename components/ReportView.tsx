@@ -1,11 +1,13 @@
 'use client';
 
+import { useCallback, useState } from 'react';
 import CategoryCard from './CategoryCard';
 import RichText from './RichText';
 import ScoreRing from './ScoreRing';
 import { useLocale } from './LocaleProvider';
 import { BAND_LABEL, BLOCKER_SCORE_CAP, scoreBand } from '@/lib/scoring';
 import { formatBytes, formatMs, formatSeconds } from '@/lib/format';
+import { buildReportHtml } from '@/lib/reportHtml';
 import type { AuditResult, PsiStrategy } from '@/lib/types';
 
 function topIssues(result: AuditResult) {
@@ -28,6 +30,40 @@ interface ReportViewProps {
 
 export default function ReportView({ result, onReset, onRetrySpeed, retrying }: ReportViewProps) {
   const { locale, intl, t } = useLocale();
+  /** Vyplní se jen tehdy, když prohlížeč nepustí nové okno — jinak zůstává prázdné. */
+  const [exportError, setExportError] = useState<string | null>(null);
+
+  /**
+   * Report do PDF. Sestaví se samostatný HTML dokument, otevře se v novém okně
+   * a rovnou se nabídne tisk — v dialogu stačí zvolit „Uložit jako PDF".
+   *
+   * Nic se neposílá na server: dokument vzniká z dat, která už prohlížeč má,
+   * takže se auditovaná adresa nedostane nikam dál a export funguje i offline.
+   */
+  const saveAsPdf = useCallback(() => {
+    const html = buildReportHtml(result, locale, intl);
+    const win = window.open('', '_blank');
+
+    if (!win) {
+      setExportError(t.pdf.popupBlocked);
+      return;
+    }
+
+    setExportError(null);
+    win.document.open();
+    win.document.write(html);
+    win.document.close();
+
+    // Krátká prodleva před dialogem: bez ní některé prohlížeče otevřou tisk
+    // ještě nad prázdnou stránkou a nabídnou k uložení bílý list.
+    const print = () => {
+      win.focus();
+      win.print();
+    };
+    if (win.document.readyState === 'complete') window.setTimeout(print, 150);
+    else win.addEventListener('load', () => window.setTimeout(print, 150), { once: true });
+  }, [result, locale, intl, t]);
+
   const speedLabel: Record<PsiStrategy, string> = {
     mobile: t.report.missing.mobile,
     desktop: t.report.missing.desktop,
@@ -117,14 +153,46 @@ export default function ReportView({ result, onReset, onRetrySpeed, retrying }: 
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={onReset}
-            className="shrink-0 self-start rounded-full border border-line px-5 py-2.5 text-sm tracking-tight
-              text-bone transition-colors hover:border-signal/40 hover:bg-inset sm:self-center"
-          >
-            {t.report.reset}
-          </button>
+          {/* Dvě akce, které má člověk s hotovým reportem udělat: uložit si ho,
+              nebo pustit další audit. Obě proto vypadají jako tlačítka, ne jako
+              odkaz stranou — dřív se nenápadné „Nový audit" přehlíželo. */}
+          <div className="flex shrink-0 flex-col gap-2 sm:self-center">
+            <button
+              type="button"
+              onClick={onReset}
+              className="btn-primary w-full px-5 py-2.5 text-sm sm:w-auto"
+            >
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                <path
+                  d="M12 7a5 5 0 1 1-1.6-3.7M12 1.6V4h-2.4"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              {t.report.reset}
+            </button>
+
+            <button
+              type="button"
+              onClick={saveAsPdf}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-full border
+                border-signal/45 bg-signal/[0.09] px-5 py-2.5 text-sm font-medium tracking-tight text-bone
+                transition-colors duration-200 hover:border-signal/70 hover:bg-signal/[0.16] sm:w-auto"
+            >
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                <path
+                  d="M7 1.5v7.5M4 6.2 7 9.2l3-3M2 10.5v1.2c0 .4.3.8.8.8h8.4c.5 0 .8-.4.8-.8v-1.2"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              {t.pdf.button}
+            </button>
+          </div>
         </div>
 
         {/* Pruh kategorií */}
@@ -150,6 +218,10 @@ export default function ReportView({ result, onReset, onRetrySpeed, retrying }: 
             </div>
           ))}
         </div>
+
+        {exportError ? (
+          <p className="mt-4 text-[0.78rem] leading-relaxed text-state-warn">{exportError}</p>
+        ) : null}
       </section>
 
       {/* Nedokončená měření — dají se doměřit bez opakování celého auditu */}

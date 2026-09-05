@@ -127,6 +127,47 @@ Události:
 Řádky `psi` jsou to hlavní, kvůli čemu log existuje — je z nich vidět, které měření kdy
 vypršelo, jestli pomohl opakovaný pokus a jestli se nenaráží na limit klíče.
 
+## Souhlas s cookies
+
+Web sám žádné cookies nenastavuje. Jediné, co ukládá, jsou tři položky v `localStorage`
+(`theme`, `locale`, `cookie-consent`), které nikam neodcházejí. Cookies přináší až Google
+Tag Manager, a ten se načte **výhradně po souhlasu** — bez něj se skript vůbec nestáhne.
+
+Lišta nabízí přijmout, odmítnout (obojí na jeden klik a se stejnou vahou) a **Více o cookies**,
+což otevře podrobné okno: kategorie s přepínačem, tabulku konkrétních cookies včetně
+zpracovatele a doby uložení, právní základ, předávání mimo EU, práva subjektu údajů a odvolání
+souhlasu. Volba se ukládá jako `{"v":1,"analytics":bool,"at":ISO}` a platí dvanáct měsíců —
+pak se lišta objeví znovu. Starší tvar (`"accepted"` / `"rejected"`) se načte a převede.
+Změnit volbu jde kdykoli odkazem **Nastavení cookies** v patičce, který otevře totéž okno.
+
+## Počítadlo spuštěných auditů
+
+Patička ukazuje, kolik auditů nástroj skutečně odbavil, zaokrouhleno dolů na hladiny
+`10+ · 20+ · 30+ · 50+ · 100+ · 200+ · 500+ · 1000+ · 5000+ · 10000+ · 20000+ · 50000+ · 100000+`.
+Zvyšuje se jen za dokončený audit, neobsahuje auditované adresy ani nic o návštěvníkovi
+a čte se z `GET /api/stats`.
+
+Úložištěm je Redis přes REST — funguje Vercel KV i Upstash, obojí mluví stejným protokolem:
+
+```
+KV_REST_API_URL=…        # nebo UPSTASH_REDIS_REST_URL
+KV_REST_API_TOKEN=…      # nebo UPSTASH_REDIS_REST_TOKEN
+```
+
+Bez těchto proměnných se počítá jen v paměti instance a patička číslo **vůbec neukáže** —
+zaokrouhlený odhad by byl tvrzení, za kterým nic nestojí. Selhání zápisu audit neshodí.
+
+## Export do PDF
+
+Tlačítko **Uložit do PDF** v hotovém reportu sestaví samostatný HTML dokument (`lib/reportHtml.ts`),
+otevře ho v novém okně a nabídne tisk — v dialogu stačí zvolit cíl „Uložit jako PDF".
+Dokument obsahuje skóre, kategorie, fatální nálezy, všechna doporučení seřazená podle váhy,
+přehled toho, co prošlo, a poznámky k měření.
+
+Skládá se celý v prohlížeči z dat, která už má: nic se neposílá na server, takže se auditovaná
+adresa nedostane nikam dál. Nemá žádné vnější zdroje (písma ani obrázky) — okno dědí CSP hlavní
+stránky a cokoli ze sítě by v něm skončilo zablokované.
+
 ## Známá omezení
 
 * **SPA weby.** Audit pracuje se staženým HTML (`fetch` + `cheerio`), takže obsah dogenerovaný JavaScriptem nevidí. Aplikace na to sama upozorní, když stránku rozpozná jako SPA.
@@ -143,12 +184,15 @@ app/
   page.tsx                   jednostránkový layout + stavový stroj (idle → running → done | error)
   api/audit/route.ts         POST endpoint, všechny kontroly kromě rychlosti
   api/audit/speed/route.ts   jedno rychlostní měření (mobil / počítač), vlastní rozpočet funkce
+  api/stats/route.ts         zaokrouhlený počet spuštěných auditů pro patičku
 lib/
   checks/                    pět modulů s kontrolami, každý vrací CheckResult[]
   i18n/                      Locale, přepínač textů kontrol, slovník rozhraní
   http.ts robots.ts jsonld.ts pagespeed.ts url.ts scoring.ts format.ts log.ts types.ts
+  counter.ts                 počítadlo auditů (Redis přes REST) a zaokrouhlení na hladiny
+  reportHtml.ts              samostatný tiskový dokument reportu pro export do PDF
 components/
-  SiteNav ThemeToggle LanguageToggle LocaleProvider SiteFooter SectionHeading
+  SiteNav ThemeToggle LanguageToggle LocaleProvider SiteFooter SectionHeading CookieConsent
   Reveal Faq RichText AmbientPattern
   UrlForm LoadingState ReportView CategoryCard CheckRow ScoreRing
 ```

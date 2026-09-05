@@ -7,6 +7,7 @@ import { extractJsonLd } from '@/lib/jsonld';
 import { pendingPageSpeed } from '@/lib/pagespeed';
 import { normalizeUrl, resolveUrl, sameRegistrableHost } from '@/lib/url';
 import { logEvent } from '@/lib/log';
+import { bumpAuditRuns } from '@/lib/counter';
 import { LOCALES, normalizeLocale, translator, type Locale } from '@/lib/i18n';
 import {
   applyBlockerCap,
@@ -318,6 +319,11 @@ export async function POST(request: Request) {
     },
     byLocale,
   };
+
+  // Počítadlo běhů pro patičku. Zvyšuje se až tady, tedy jen za dokončený
+  // audit — neplatná adresa ani nedostupná stránka se nepočítá. Selhání zápisu
+  // se ignoruje, report je důležitější než statistika.
+  await bumpAuditRuns().catch(() => 0);
 
   logEvent('audit', {
     url: target,

@@ -323,6 +323,34 @@ const cs = {
     notes: 'Poznámky k měření',
   },
 
+  pdf: {
+    button: 'Uložit do PDF',
+    /** %s = auditovaná adresa */
+    docTitle: 'Audit webu — %s',
+    print: 'Uložit jako PDF',
+    printHint: 'V dialogu tisku zvolte cíl „Uložit jako PDF“.',
+    subtitle: 'Rychlost, SEO, AEO, GEO a technický stav',
+    generated: 'Vytvořeno',
+    overall: 'Celkové skóre',
+    categories: 'Skóre kategorií',
+    blockers: 'Fatální nálezy',
+    recommendations: 'Doporučení',
+    recommendationsLead:
+      'Seřazeno podle váhy ve skóre — nahoře je to, co s výsledkem udělá nejvíc. Texty jsou předem ' +
+      'napsané a vybrané podle naměřené hodnoty, nic z nich negeneruje jazykový model.',
+    noRecommendations: 'Žádná doporučení. Všechny bodované kontroly prošly.',
+    passed: 'Prošlo bez připomínek',
+    notes: 'Poznámky k měření',
+    weight: 'váha',
+    measured: 'Naměřeno',
+    unscored: 'neověřeno',
+    footer:
+      'Report vytvořil nástroj Audit webu (audit.semakod.cz) od Semakod. Audit se nikam neukládá — ' +
+      'tenhle dokument je jeho jediná kopie.',
+    popupBlocked:
+      'Prohlížeč zablokoval otevření nového okna. Povolte pro tuhle stránku vyskakovací okna a zkuste to znovu.',
+  },
+
   category: {
     unscored: 'Neověřeno',
     pass: 'v pořádku',
@@ -369,6 +397,12 @@ const cs = {
     ],
     contents: 'Obsah',
     sources: 'Zdroje dat',
+    links: 'Odkazy',
+    services: 'Služby Semakod',
+    runs: {
+      label: 'Spuštěných auditů',
+      hint: 'Skutečný počet běhů, zaokrouhlený dolů.',
+    },
     noteLeft: 'Audit se počítá při každém požadavku znovu a nikam se neukládá.',
     noteRight: 'Měřeno pro mobil i pro počítač · data z Googlu se mohou mezi běhy lišit.',
     credit: 'Vytvořil a provozuje Semakod',
@@ -377,9 +411,145 @@ const cs = {
   },
 
   cookie: {
-    text: 'Používáme volitelnou analytiku (Google Tag Manager), abychom viděli, jak si audit vede. Bez souhlasu se nic neukládá a analytika se vůbec nenačte.',
+    /* ---------- lišta ---------- */
+    aria: 'Souhlas s cookies',
+    title: 'Cookies a soukromí',
+    text:
+      'Tenhle web sám žádné cookies nenastavuje. Volitelně umí načíst Google Tag Manager s Google ' +
+      'Analytics 4, aby bylo vidět, kolik lidí audit používá — teprve ten ukládá cookies do vašeho ' +
+      'prohlížeče. Bez souhlasu se nenačte vůbec a odmítnutí je stejně rychlé jako souhlas.',
     accept: 'Přijmout',
     reject: 'Odmítnout',
+    more: 'Více o cookies',
+
+    /* ---------- modální okno ---------- */
+    modal: {
+      title: 'Cookies a zpracování údajů',
+      lead:
+        'Co se při návštěvě ukládá, kdo to zpracovává, na jak dlouho a co s tím můžete udělat. ' +
+        'Sepsané podle GDPR a § 89 odst. 3 zákona č. 127/2005 Sb., o elektronických komunikacích.',
+      updated: 'Znění platné od ledna 2026',
+      close: 'Zavřít',
+      save: 'Uložit volbu',
+      acceptAll: 'Přijmout vše',
+      rejectAll: 'Odmítnout vše',
+      alwaysOn: 'Vždy aktivní',
+      optional: 'Volitelné',
+      enabled: 'Zapnuto',
+      disabled: 'Vypnuto',
+      choiceLabel: 'Analytické cookies',
+      tableHead: {
+        name: 'Název',
+        provider: 'Zpracovatel',
+        purpose: 'Účel',
+        expiry: 'Doba uložení',
+      },
+      groups: [
+        {
+          id: 'necessary',
+          title: 'Nezbytné',
+          required: true,
+          text:
+            'Technicky vzato nejde o cookies, ale o tři položky v úložišti prohlížeče (localStorage). ' +
+            'Nikam se neposílají — zůstávají ve vašem zařízení a server je nikdy nevidí. Bez nich by web ' +
+            'zapomněl motiv, jazyk i vaši volbu na téhle liště, takže na ně souhlas podle zákona není potřeba.',
+          rows: [
+            {
+              name: 'theme',
+              provider: 'audit.semakod.cz',
+              purpose: 'Světlý nebo tmavý režim',
+              expiry: 'Do smazání dat prohlížeče',
+            },
+            {
+              name: 'locale',
+              provider: 'audit.semakod.cz',
+              purpose: 'Zvolený jazyk rozhraní',
+              expiry: 'Do smazání dat prohlížeče',
+            },
+            {
+              name: 'cookie-consent',
+              provider: 'audit.semakod.cz',
+              purpose: 'Vaše volba na téhle liště, ať se neptáme při každé návštěvě',
+              expiry: '12 měsíců',
+            },
+          ],
+        },
+        {
+          id: 'analytics',
+          title: 'Analytické',
+          required: false,
+          text:
+            'Google Tag Manager, který načte Google Analytics 4. Zajímá nás jen souhrn: kolik auditů se ' +
+            'spustí, odkud lidé přicházejí a kde ze stránky odcházejí. Adresy, které auditujete, ani ' +
+            'výsledky auditů se do analytiky neposílají. Bez souhlasu se skript vůbec nestáhne — nejde ' +
+            'o načtení „na později", ale o žádné načtení.',
+          rows: [
+            {
+              name: '_ga',
+              provider: 'Google Ireland Limited',
+              purpose: 'Odliší vracejícího se návštěvníka od nového',
+              expiry: '2 roky',
+            },
+            {
+              name: '_ga_*',
+              provider: 'Google Ireland Limited',
+              purpose: 'Drží stav jedné návštěvy (session)',
+              expiry: '2 roky',
+            },
+            {
+              name: '_gid',
+              provider: 'Google Ireland Limited',
+              purpose: 'Odliší zařízení v rámci jednoho dne',
+              expiry: '24 hodin',
+            },
+          ],
+        },
+      ],
+      sections: [
+        {
+          title: 'Kdo údaje zpracovává',
+          text:
+            'Správcem je Mykola Stoyka — Semakod, IČO 01796763, provozovatel audit.semakod.cz. ' +
+            'Analytiku jako zpracovatel zajišťuje Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Irsko. ' +
+            'Kontakt na správce najdete na semakod.cz.',
+        },
+        {
+          title: 'Právní základ',
+          text:
+            'Analytické cookies ukládáme jen na základě vašeho souhlasu podle čl. 6 odst. 1 písm. a) GDPR ' +
+            'a § 89 odst. 3 zákona č. 127/2005 Sb. Souhlas je dobrovolný: bez něj funguje audit úplně stejně, ' +
+            'nic se neomezuje. Nezbytné položky v úložišti prohlížeče souhlas nevyžadují.',
+        },
+        {
+          title: 'Předávání mimo EU',
+          text:
+            'Google může údaje zpracovávat i na serverech mimo Evropskou unii. Podkladem je rozhodnutí ' +
+            'Evropské komise o odpovídající ochraně (rámec EU–US Data Privacy Framework) doplněné o ' +
+            'standardní smluvní doložky. Bez souhlasu s analytikou se ven neposílá nic.',
+        },
+        {
+          title: 'Jak dlouho souhlas platí',
+          text:
+            'Vaši volbu si pamatujeme dvanáct měsíců. Pak se zeptáme znovu — souhlas z roku 2025 nemá ' +
+            'platit napořád. Kdykoli mezitím ho můžete změnit odkazem „Nastavení cookies" v patičce.',
+        },
+        {
+          title: 'Co tady nenajdete',
+          text:
+            'Žádné reklamní ani profilovací cookies, žádné sledování napříč weby, žádný prodej ani ' +
+            'předávání údajů dalším stranám. Samotný audit se nikam neukládá: počítá se při každém ' +
+            'požadavku znovu a po odeslání odpovědi z paměti mizí. Vedeme jen anonymní počítadlo ' +
+            'spuštěných auditů, které neobsahuje ani auditované adresy, ani nic o návštěvníkovi.',
+        },
+        {
+          title: 'Vaše práva',
+          text:
+            'Máte právo na přístup k údajům, opravu, výmaz, omezení zpracování, přenositelnost a právo ' +
+            'vznést námitku. Souhlas můžete kdykoli odvolat, aniž by to ovlivnilo zákonnost zpracování ' +
+            'před odvoláním. Stěžovat si můžete u Úřadu pro ochranu osobních údajů (uoou.gov.cz).',
+        },
+      ],
+    },
   },
 
   errors: {
@@ -716,6 +886,33 @@ const en: UiDict = {
     notes: 'Measurement notes',
   },
 
+  pdf: {
+    button: 'Save as PDF',
+    docTitle: 'Site audit — %s',
+    print: 'Save as PDF',
+    printHint: 'In the print dialog pick “Save as PDF” as the destination.',
+    subtitle: 'Speed, SEO, AEO, GEO and technical health',
+    generated: 'Created',
+    overall: 'Overall score',
+    categories: 'Category scores',
+    blockers: 'Fatal findings',
+    recommendations: 'Recommendations',
+    recommendationsLead:
+      'Ordered by weight in the score — what makes the biggest difference comes first. The texts are ' +
+      'pre-written and picked by the measured value; none of them is generated by a language model.',
+    noRecommendations: 'No recommendations. Every scored check passed.',
+    passed: 'Passed without remarks',
+    notes: 'Measurement notes',
+    weight: 'weight',
+    measured: 'Measured',
+    unscored: 'not verified',
+    footer:
+      'This report was produced by Site Audit (audit.semakod.cz) by Semakod. The audit is never stored — ' +
+      'this document is its only copy.',
+    popupBlocked:
+      'The browser blocked the new window. Allow pop-ups for this page and try again.',
+  },
+
   category: {
     unscored: 'Not verified',
     pass: 'fine',
@@ -762,6 +959,12 @@ const en: UiDict = {
     ],
     contents: 'Contents',
     sources: 'Data sources',
+    links: 'Links',
+    services: 'Semakod services',
+    runs: {
+      label: 'Audits run',
+      hint: 'The real number of runs, rounded down.',
+    },
     noteLeft: 'The audit is recomputed on every request and nothing is stored.',
     noteRight: 'Measured for mobile and desktop · Google’s data can differ between runs.',
     credit: 'Built and run by Semakod',
@@ -770,9 +973,147 @@ const en: UiDict = {
   },
 
   cookie: {
-    text: 'We use optional analytics (Google Tag Manager) to see how the audit is doing. Nothing is stored without consent, and analytics never loads without it.',
+    /* ---------- banner ---------- */
+    aria: 'Cookie consent',
+    title: 'Cookies and privacy',
+    text:
+      'This site sets no cookies of its own. Optionally it can load Google Tag Manager with Google ' +
+      'Analytics 4 so we can see how many people use the audit — that is what stores cookies in your ' +
+      'browser. Without consent it never loads, and rejecting takes exactly as long as accepting.',
     accept: 'Accept',
     reject: 'Reject',
+    more: 'More about cookies',
+
+    /* ---------- modal ---------- */
+    modal: {
+      title: 'Cookies and data processing',
+      lead:
+        'What gets stored during your visit, who processes it, for how long and what you can do about it. ' +
+        'Written up under the GDPR and § 89(3) of Czech Act No. 127/2005 Coll. on electronic communications.',
+      updated: 'Version effective January 2026',
+      close: 'Close',
+      save: 'Save choice',
+      acceptAll: 'Accept all',
+      rejectAll: 'Reject all',
+      alwaysOn: 'Always on',
+      optional: 'Optional',
+      enabled: 'On',
+      disabled: 'Off',
+      choiceLabel: 'Analytics cookies',
+      tableHead: {
+        name: 'Name',
+        provider: 'Processor',
+        purpose: 'Purpose',
+        expiry: 'Retention',
+      },
+      groups: [
+        {
+          id: 'necessary',
+          title: 'Strictly necessary',
+          required: true,
+          text:
+            'Technically these are not cookies but three entries in browser storage (localStorage). ' +
+            'They are never sent anywhere — they stay on your device and the server never sees them. ' +
+            'Without them the site would forget your theme, your language and your choice on this banner, ' +
+            'so the law does not require consent for them.',
+          rows: [
+            {
+              name: 'theme',
+              provider: 'audit.semakod.cz',
+              purpose: 'Light or dark mode',
+              expiry: 'Until browser data is cleared',
+            },
+            {
+              name: 'locale',
+              provider: 'audit.semakod.cz',
+              purpose: 'Selected interface language',
+              expiry: 'Until browser data is cleared',
+            },
+            {
+              name: 'cookie-consent',
+              provider: 'audit.semakod.cz',
+              purpose: 'Your choice on this banner, so we stop asking on every visit',
+              expiry: '12 months',
+            },
+          ],
+        },
+        {
+          id: 'analytics',
+          title: 'Analytics',
+          required: false,
+          text:
+            'Google Tag Manager, which loads Google Analytics 4. We only care about the aggregate: how ' +
+            'many audits get run, where people arrive from and where they leave. The addresses you audit ' +
+            'and the audit results are never sent to analytics. Without consent the script is not ' +
+            'downloaded at all — not deferred, simply never loaded.',
+          rows: [
+            {
+              name: '_ga',
+              provider: 'Google Ireland Limited',
+              purpose: 'Tells a returning visitor from a new one',
+              expiry: '2 years',
+            },
+            {
+              name: '_ga_*',
+              provider: 'Google Ireland Limited',
+              purpose: 'Holds the state of a single session',
+              expiry: '2 years',
+            },
+            {
+              name: '_gid',
+              provider: 'Google Ireland Limited',
+              purpose: 'Tells devices apart within one day',
+              expiry: '24 hours',
+            },
+          ],
+        },
+      ],
+      sections: [
+        {
+          title: 'Who processes the data',
+          text:
+            'The controller is Mykola Stoyka — Semakod, Company ID 01796763, operator of audit.semakod.cz. ' +
+            'Analytics is handled as a processor by Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Ireland. ' +
+            'Contact details for the controller are on semakod.cz.',
+        },
+        {
+          title: 'Legal basis',
+          text:
+            'Analytics cookies are stored solely on your consent under Art. 6(1)(a) GDPR and § 89(3) of ' +
+            'Act No. 127/2005 Coll. Consent is voluntary: without it the audit works exactly the same and ' +
+            'nothing is withheld. The strictly necessary browser-storage entries require no consent.',
+        },
+        {
+          title: 'Transfers outside the EU',
+          text:
+            'Google may process data on servers outside the European Union. The basis is the European ' +
+            'Commission adequacy decision (the EU–US Data Privacy Framework) together with standard ' +
+            'contractual clauses. Without consent to analytics, nothing leaves at all.',
+        },
+        {
+          title: 'How long consent lasts',
+          text:
+            'We remember your choice for twelve months, then ask again — consent given in 2025 should not ' +
+            'hold forever. You can change it at any point through “Cookie settings” in the footer.',
+        },
+        {
+          title: 'What you will not find here',
+          text:
+            'No advertising or profiling cookies, no cross-site tracking, no selling or passing data on to ' +
+            'third parties. The audit itself is never stored: it is recomputed on every request and leaves ' +
+            'memory once the response is sent. We keep only an anonymous counter of audit runs, which ' +
+            'holds neither the audited addresses nor anything about the visitor.',
+        },
+        {
+          title: 'Your rights',
+          text:
+            'You have the right of access, rectification, erasure, restriction of processing, data ' +
+            'portability and the right to object. You may withdraw consent at any time without affecting ' +
+            'the lawfulness of processing before the withdrawal. Complaints go to the Czech Data ' +
+            'Protection Authority (uoou.gov.cz).',
+        },
+      ],
+    },
   },
 
   errors: {
