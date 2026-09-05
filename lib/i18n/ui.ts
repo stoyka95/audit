@@ -57,7 +57,7 @@ const cs = {
     titleBetween: ' i\u00a0',
     titleAccent: 'umělá inteligence',
     lead:
-      'Vložte adresu a nástroj projde přes třicet konkrétních kontrol — od Core Web Vitals přes ' +
+      'Vložte adresu a nástroj projde přes padesát konkrétních kontrol — od Core Web Vitals přes ' +
       'strukturovaná data až po pravidla pro AI boty. Žádné obecné rady od jazykového modelu, ' +
       'jen měřitelná fakta a předem připravená doporučení.',
     note:
@@ -75,27 +75,33 @@ const cs = {
     },
     {
       title: 'SEO',
-      weight: '30 %',
+      weight: '25 %',
       description: 'Základ indexovatelnosti a on-page signály, které rozhodují o pozici ve vyhledávání.',
-      items: ['noindex', 'Title', 'H1', 'Canonical', 'robots.txt', 'Sitemapa', 'Mixed content'],
+      items: ['noindex', 'Title', 'H1', 'Canonical', 'Open Graph', 'robots.txt', 'Sitemapa'],
     },
     {
       title: 'AEO',
-      weight: '15 %',
+      weight: '12 %',
       description: 'Připravenost obsahu na to, aby z něj šla vytáhnout přímá odpověď.',
       items: ['FAQ / HowTo schéma', 'Otázkové nadpisy', 'Přímá odpověď', 'Délka odstavců'],
     },
     {
       title: 'GEO',
-      weight: '15 %',
+      weight: '13 %',
       description: 'Viditelnost pro generativní AI a pravidla pro boty, které vás mohou citovat.',
-      items: ['llms.txt', 'AI boti', 'Entitní profily', 'Aktuálnost obsahu'],
+      items: ['llms.txt', 'AI boti', 'Entitní profily', 'Kontakt a autor', 'Aktuálnost obsahu'],
     },
     {
       title: 'Správnost',
-      weight: '15 %',
+      weight: '13 %',
       description: 'Technický stav a spolehlivost — věci, které tiše kazí zážitek i procházení.',
-      items: ['Viewport', 'Favicon', 'Rozbité odkazy', 'Bezpečnostní hlavičky'],
+      items: ['Viewport', 'Favicon', 'Vlastní 404', 'HSTS', 'Rozbité odkazy'],
+    },
+    {
+      title: 'Přístupnost',
+      weight: '12 %',
+      description: 'Použitelnost pro klávesnici a čtečky obrazovky — čím dál častěji i zákonná povinnost.',
+      items: ['Landmarky', 'Popisky formulářů', 'Přístupné názvy', 'Pořadí tabulátoru'],
     },
   ],
 
@@ -131,7 +137,7 @@ const cs = {
 
   what: {
     eyebrow: 'Co kontrolujeme',
-    title: 'Přes třicet kontrol v pěti oblastech',
+    title: 'Přes padesát kontrol v šesti oblastech',
     lead:
       'Váhy u kategorií říkají, jakou částí se podílejí na celkovém skóre. Rychlost se počítá zvlášť ' +
       'pro mobil a pro počítač, dohromady tvoří 25 %.',
@@ -189,7 +195,7 @@ const cs = {
       },
       {
         q: 'Jak se počítá celkové skóre?',
-        a: 'Každá kontrola má stav (v pořádku / ke zlepšení / chybí) a váhu podle závažnosti. Skóre kategorie je jejich vážený průměr, celkové skóre pak vážený průměr kategorií — SEO 30 %, rychlost dohromady 25 %, AEO, GEO a Správnost po 15 %. Měřitelné metriky jako LCP nebo CLS se nepřevádějí natvrdo, ale plynule, takže i malé zlepšení je ve skóre vidět.',
+        a: 'Každá kontrola má stav (v pořádku / ke zlepšení / chybí) a váhu podle závažnosti. Skóre kategorie je jejich vážený průměr, celkové skóre pak vážený průměr kategorií — SEO 25 %, rychlost dohromady 25 %, GEO a Správnost po 13 %, AEO a Přístupnost po 12 %. Měřitelné metriky jako LCP nebo CLS se nepřevádějí natvrdo, ale plynule, takže i malé zlepšení je ve skóre vidět.',
       },
       {
         q: 'Proč je někdy u kategorie pomlčka místo čísla?',
@@ -337,7 +343,7 @@ const cs = {
     printHint:
       'V dialogu tisku zvolte cíl „Uložit jako PDF“ a vypněte volbu Záhlaví a zápatí — ' +
       'jinak prohlížeč dotiskne na každou stránku datum a adresu.',
-    subtitle: 'Rychlost, SEO, AEO, GEO a technický stav',
+    subtitle: 'Rychlost, SEO, AEO, GEO, technický stav a přístupnost',
     eyebrow: 'Výsledek auditu',
     generated: 'Vytvořeno',
     overall: 'Celkové skóre',
@@ -403,8 +409,8 @@ const cs = {
   footer: {
     aria: 'Patička',
     tagline:
-      'Pravidly řízený audit rychlosti, SEO, AEO, GEO a technického stavu. Všechna doporučení jsou ' +
-      'předem napsaná a navázaná na konkrétní kontrolu — nic negeneruje jazykový model.',
+      'Pravidly řízený audit rychlosti, SEO, AEO, GEO, technického stavu a přístupnosti. Všechna ' +
+      'doporučení jsou předem napsaná a navázaná na konkrétní kontrolu — nic negeneruje jazykový model.',
     facts: {
       audits: {
         label: 'Auditů',
@@ -419,8 +425,8 @@ const cs = {
       categories: {
         label: 'Kategorií',
         hint:
-          'Rychlost se hodnotí zvlášť pro mobil a pro počítač, proto má report šest kategorií, ' +
-          'i když oblasti auditu jsou čtyři plus rychlost.',
+          'Pět oblastí auditu (SEO, AEO, GEO, Správnost, Přístupnost) a rychlost hodnocená zvlášť ' +
+          'pro mobil a pro počítač — dohromady sedm kategorií v jednom reportu.',
       },
       stored: { label: 'Uložených dat', value: '0' },
     },
@@ -644,7 +650,7 @@ const en: UiDict = {
     titleBetween: ' and\u00a0to ',
     titleAccent: 'AI',
     lead:
-      'Enter an address and the tool runs more than thirty concrete checks — from Core Web Vitals ' +
+      'Enter an address and the tool runs more than fifty concrete checks — from Core Web Vitals ' +
       'through structured data to AI bot rules. No generic advice from a language model, just ' +
       'measurable facts and pre-written recommendations.',
     note:
@@ -662,27 +668,33 @@ const en: UiDict = {
     },
     {
       title: 'SEO',
-      weight: '30%',
+      weight: '25%',
       description: 'Indexability basics and the on-page signals that decide your position in search.',
-      items: ['noindex', 'Title', 'H1', 'Canonical', 'robots.txt', 'Sitemap', 'Mixed content'],
+      items: ['noindex', 'Title', 'H1', 'Canonical', 'Open Graph', 'robots.txt', 'Sitemap'],
     },
     {
       title: 'AEO',
-      weight: '15%',
+      weight: '12%',
       description: 'How ready the content is for a direct answer to be extracted from it.',
       items: ['FAQ / HowTo schema', 'Question headings', 'Direct answer', 'Paragraph length'],
     },
     {
       title: 'GEO',
-      weight: '15%',
+      weight: '13%',
       description: 'Visibility for generative AI and rules for the bots that may cite you.',
-      items: ['llms.txt', 'AI bots', 'Entity profiles', 'Content freshness'],
+      items: ['llms.txt', 'AI bots', 'Entity profiles', 'Contact & author', 'Content freshness'],
     },
     {
       title: 'Soundness',
-      weight: '15%',
+      weight: '13%',
       description: 'Technical health and reliability — the things that quietly spoil both browsing and crawling.',
-      items: ['Viewport', 'Favicon', 'Broken links', 'Security headers'],
+      items: ['Viewport', 'Favicon', 'Custom 404', 'HSTS', 'Broken links'],
+    },
+    {
+      title: 'Accessibility',
+      weight: '12%',
+      description: 'Usability for keyboards and screen readers — increasingly a legal requirement too.',
+      items: ['Landmarks', 'Form labels', 'Accessible names', 'Tab order'],
     },
   ],
 
@@ -718,7 +730,7 @@ const en: UiDict = {
 
   what: {
     eyebrow: 'What we check',
-    title: 'Over thirty checks across five areas',
+    title: 'Over fifty checks across six areas',
     lead:
       'The weight on each category is the share it contributes to the overall score. Speed is measured ' +
       'separately for mobile and desktop, together making up 25%.',
@@ -776,7 +788,7 @@ const en: UiDict = {
       },
       {
         q: 'How is the overall score calculated?',
-        a: 'Every check has a status (fine / could be better / missing) and a weight based on severity. A category score is their weighted average, and the overall score is a weighted average of the categories — SEO 30%, speed 25% combined, AEO, GEO and Soundness 15% each. Measurable metrics such as LCP or CLS are not converted in hard steps but continuously, so even a small improvement shows up.',
+        a: 'Every check has a status (fine / could be better / missing) and a weight based on severity. A category score is their weighted average, and the overall score is a weighted average of the categories — SEO 25%, speed 25% combined, GEO and Soundness 13% each, AEO and Accessibility 12% each. Measurable metrics such as LCP or CLS are not converted in hard steps but continuously, so even a small improvement shows up.',
       },
       {
         q: 'Why does a category sometimes show a dash instead of a number?',
@@ -923,7 +935,7 @@ const en: UiDict = {
     printHint:
       'In the print dialog pick “Save as PDF” as the destination and turn off Headers and footers — ' +
       'otherwise the browser prints the date and the address onto every page.',
-    subtitle: 'Speed, SEO, AEO, GEO and technical health',
+    subtitle: 'Speed, SEO, AEO, GEO, technical health and accessibility',
     eyebrow: 'Audit result',
     generated: 'Created',
     overall: 'Overall score',
@@ -989,8 +1001,8 @@ const en: UiDict = {
   footer: {
     aria: 'Footer',
     tagline:
-      'A rule-driven audit of speed, SEO, AEO, GEO and technical health. Every recommendation is ' +
-      'pre-written and tied to a specific check — nothing is generated by a language model.',
+      'A rule-driven audit of speed, SEO, AEO, GEO, technical health and accessibility. Every ' +
+      'recommendation is pre-written and tied to a specific check — nothing is generated by a language model.',
     facts: {
       audits: {
         label: 'Audits',
@@ -1005,8 +1017,8 @@ const en: UiDict = {
       categories: {
         label: 'Categories',
         hint:
-          'Speed is scored separately for mobile and desktop, so the report has six categories ' +
-          'even though the audit covers four areas plus speed.',
+          'Five audit areas (SEO, AEO, GEO, Soundness, Accessibility) plus speed scored separately ' +
+          'for mobile and desktop — seven categories in one report.',
       },
       stored: { label: 'Data stored', value: '0' },
     },

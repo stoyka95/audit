@@ -12,7 +12,7 @@ export function normalizeLocale(value: unknown): Locale {
  * Výběr jazykové varianty jednoho textu.
  *
  * Texty kontrol schválně nebydlí ve vzdálené mapě klíčů, ale přímo u podmínky,
- * která je vybírá. Kontrol je přes třicet a většina má tři až čtyři varianty
+ * která je vybírá. Kontrol je přes padesát a většina má tři až čtyři varianty
  * podle naměřené hodnoty — se samostatným slovníkem by se prahy a texty časem
  * nevyhnutelně rozešly a nikdo by si toho nevšiml. Takhle je při úpravě prahu
  * překlad na očích.

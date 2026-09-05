@@ -84,6 +84,7 @@ function speedOnlyContext(
     psiDesktop: psi,
     brokenLinks: { checked: 0, totalFound: 0, broken: [], failed: false },
     faviconLive: null,
+    notFound: { checked: false, status: null, textLength: 0, redirectedToHome: false },
   };
 }
 

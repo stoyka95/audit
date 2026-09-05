@@ -548,9 +548,13 @@ export default function Home() {
               <Reveal
                 key={category.title}
                 delay={index * 60}
-                // Kategorií je pět, mřížka má dva sloupce — poslední karta by
-                // jinak zůstala sama v levém sloupci a řada by vypadala uťatě.
-                className={index === t.categories.length - 1 ? 'md:col-span-2' : undefined}
+                // Lichý počet karet by nechal poslední samotnou v levém sloupci —
+                // roztáhne se přes celou šířku, ať řada nevypadá uťatě.
+                className={
+                  t.categories.length % 2 === 1 && index === t.categories.length - 1
+                    ? 'md:col-span-2'
+                    : undefined
+                }
               >
                 <div className="panel panel-hover h-full p-5 sm:p-6">
                   <div className="flex items-baseline justify-between gap-3">

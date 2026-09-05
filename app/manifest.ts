@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: 'Audit webu — Semakod',
     short_name: 'Audit webu',
     description:
-      'Audit webu zdarma: rychlost, SEO, AEO, GEO a technický stav. Bez registrace, výsledek do dvou minut.',
+      'Audit webu zdarma: rychlost, SEO, AEO, GEO, technický stav a přístupnost. Bez registrace, výsledek do dvou minut.',
     start_url: '/',
     display: 'standalone',
     background_color: '#08080a',

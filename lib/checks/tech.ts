@@ -14,14 +14,6 @@ interface HeaderDefinition {
 
 const SECURITY_HEADERS: HeaderDefinition[] = [
   {
-    key: 'strict-transport-security',
-    label: 'Strict-Transport-Security',
-    hint: {
-      cs: 'vynutí HTTPS i při ručním zadání http://',
-      en: 'forces HTTPS even when http:// is typed manually',
-    },
-  },
-  {
     key: 'x-content-type-options',
     label: 'X-Content-Type-Options',
     hint: {
@@ -140,12 +132,12 @@ export function techChecks(ctx: AuditContext): CheckResult[] {
     detail:
       missing.length === 0
         ? t(
-            'Všechny tři sledované bezpečnostní hlavičky server odesílá. Prohlížeč tak vynutí HTTPS, nehádá typy souborů a respektuje politiku obsahu. Obsah CSP si čas od času projděte, ať neobsahuje zbytečně široká pravidla.',
-            'The server sends all three tracked security headers. Browsers will force HTTPS, stop guessing file types and honour the content policy. Review the CSP occasionally so it does not drift into overly broad rules.',
+            'Server odesílá obě sledované doplňkové bezpečnostní hlavičky. Prohlížeč tak nehádá typy souborů a respektuje politiku obsahu. Obsah CSP si čas od času projděte, ať neobsahuje zbytečně široká pravidla.',
+            'The server sends both tracked supplementary security headers. Browsers will not guess file types and will honour the content policy. Review the CSP occasionally so it does not drift into overly broad rules.',
           )
         : t(
-            `Serveru chybí ${missing.length} ze tří sledovaných bezpečnostních hlaviček. Nejde o SEO problém, proto se do skóre nezapočítává, ale doplnění je většinou otázka pár řádků v konfiguraci serveru. Chybí: ${missing.map((header) => header.label).join(', ')}.`,
-            `The server is missing ${missing.length} of the three tracked security headers. This is not an SEO issue, so it does not count towards the score, but adding them is usually a few lines of server config. Missing: ${missing.map((header) => header.label).join(', ')}.`,
+            `Serveru chybí ${missing.length} z ${SECURITY_HEADERS.length} sledovaných doplňkových bezpečnostních hlaviček. Nejde o SEO problém, proto se do skóre nezapočítává, ale doplnění je většinou otázka pár řádků v konfiguraci serveru. Chybí: ${missing.map((header) => header.label).join(', ')}.`,
+            `The server is missing ${missing.length} of the ${SECURITY_HEADERS.length} tracked supplementary security headers. This is not an SEO issue, so it does not count towards the score, but adding them is usually a few lines of server config. Missing: ${missing.map((header) => header.label).join(', ')}.`,
           ),
     meta: {
       kind: 'list',
@@ -155,6 +147,193 @@ export function techChecks(ctx: AuditContext): CheckResult[] {
       ),
     },
   });
+
+  /* --- HSTS (vynucení HTTPS) --- */
+  const hsts = page.headers['strict-transport-security'] ?? '';
+  const hstsMaxAgeMatch = /max-age\s*=\s*(\d+)/i.exec(hsts);
+  const hstsMaxAge = hstsMaxAgeMatch ? Number(hstsMaxAgeMatch[1]) : null;
+  // Půl roku je běžně doporučované minimum (Google/Chrome HSTS preload žádá rok).
+  const HSTS_MIN_SECONDS = 15_552_000;
+  const hstsLabel = t('HSTS (Strict-Transport-Security)', 'HSTS (Strict-Transport-Security)');
+  if (!hsts) {
+    checks.push({
+      id: 'hsts',
+      label: hstsLabel,
+      status: 'fail',
+      value: t('chybí', 'missing'),
+      weight: 1,
+      detail: t(
+        'Server neodesílá hlavičku `Strict-Transport-Security`. Prohlížeč si tak nezapamatuje, že má na tuto doménu vždy chodit přes HTTPS, a při ručně zadaném http:// nebo starém odkazu jde první požadavek nešifrovaně, než ho přesměrování opraví. Nastavte `Strict-Transport-Security: max-age=31536000; includeSubDomains`.',
+        'The server does not send a `Strict-Transport-Security` header. Browsers will not remember to always use HTTPS for this domain, so a manually typed http:// or an old link sends the first request unencrypted before a redirect fixes it. Set `Strict-Transport-Security: max-age=31536000; includeSubDomains`.',
+      ),
+    });
+  } else if (hstsMaxAge === null || hstsMaxAge < HSTS_MIN_SECONDS) {
+    checks.push({
+      id: 'hsts',
+      label: hstsLabel,
+      status: 'warn',
+      value: hstsMaxAge === null ? t('bez max-age', 'no max-age') : t(`max-age ${Math.round(hstsMaxAge / 86400)} dní`, `max-age ${Math.round(hstsMaxAge / 86400)} days`),
+      weight: 1,
+      detail: t(
+        `Hlavička HSTS je nastavená, ale ${hstsMaxAge === null ? 'neobsahuje platnou hodnotu max-age' : `platí jen ${Math.round(hstsMaxAge / 86400)} dní, což je méně než doporučených 180`}. Krátká platnost znamená, že si prohlížeč vynucení HTTPS brzy „zapomene". Nastavte max-age alespoň na rok (31536000 vteřin), ideálně s includeSubDomains.`,
+        `The HSTS header is set, but ${hstsMaxAge === null ? 'it has no valid max-age value' : `it is only valid for ${Math.round(hstsMaxAge / 86400)} days, less than the recommended 180`}. A short lifetime means the browser soon "forgets" to enforce HTTPS. Set max-age to at least a year (31536000 seconds), ideally with includeSubDomains.`,
+      ),
+    });
+  } else {
+    checks.push({
+      id: 'hsts',
+      label: hstsLabel,
+      status: 'pass',
+      value: t(`max-age ${Math.round(hstsMaxAge / 86400)} dní`, `max-age ${Math.round(hstsMaxAge / 86400)} days`),
+      weight: 1,
+      detail: t(
+        `Hlavička HSTS je nastavená s dostatečnou platností (${Math.round(hstsMaxAge / 86400)} dní). Prohlížeč si zapamatuje, že tato doména se má vždy načítat přes HTTPS, a nedovolí ani ručně zadané http://. To chrání i před útoky typu SSL stripping.`,
+        `The HSTS header is set with a sufficient lifetime (${Math.round(hstsMaxAge / 86400)} days). Browsers remember that this domain must always load over HTTPS, blocking even a manually typed http://. This also protects against SSL-stripping attacks.`,
+      ),
+    });
+  }
+
+  /* --- Komprese odpovědi --- */
+  const contentEncoding = (page.headers['content-encoding'] ?? '').toLowerCase();
+  const isCompressed = /\b(gzip|br|zstd)\b/.test(contentEncoding);
+  checks.push({
+    id: 'compression',
+    label: t('Komprese odpovědi (gzip/brotli)', 'Response compression (gzip/brotli)'),
+    status: isCompressed ? 'pass' : 'warn',
+    value: isCompressed ? contentEncoding : t('bez komprese', 'uncompressed'),
+    weight: 1,
+    detail: isCompressed
+      ? t(
+          `Server posílá HTML komprimované (${contentEncoding}), takže přenos je výrazně menší a stránka se natáhne rychleji, zejména na mobilních sítích. Ověřte, že kompresi mají i CSS a JavaScript soubory, ne jen HTML.`,
+          `The server sends the HTML compressed (${contentEncoding}), so the transfer is much smaller and the page loads faster, especially on mobile networks. Check that CSS and JavaScript files are compressed too, not just the HTML.`,
+        )
+      : t(
+          'Odpověď serveru neobsahuje hlavičku `Content-Encoding` s gzip, brotli ani zstd — HTML se posílá nekomprimované. U textového obsahu jde typicky o úsporu 70–80 % velikosti přenosu prakticky zadarmo. Zapněte kompresi na webovém serveru nebo CDN (Brotli je efektivnější než gzip).',
+          'The server response has no `Content-Encoding` header with gzip, brotli or zstd — the HTML is sent uncompressed. For text content this is typically a 70–80% reduction in transfer size for almost no cost. Enable compression on the web server or CDN (Brotli is more efficient than gzip).',
+        ),
+  });
+
+  /* --- Cache-Control --- */
+  const cacheControl = page.headers['cache-control'] ?? '';
+  const hasCacheControl = cacheControl.trim().length > 0;
+  checks.push({
+    id: 'cache-control',
+    label: 'Cache-Control',
+    status: hasCacheControl ? 'pass' : 'warn',
+    value: hasCacheControl ? cacheControl.slice(0, 60) : t('chybí', 'missing'),
+    weight: 1,
+    detail: hasCacheControl
+      ? t(
+          `Odpověď nese hlavičku Cache-Control (\`${cacheControl.slice(0, 80)}\`), takže prohlížeče a CDN vědí, jak dlouho smí obsah uchovat bez opětovného stažení. U HTML stránky s proměnlivým obsahem bývá v pořádku i krátká platnost nebo \`no-cache\` — hlavní je, že je nastavená vědomě.`,
+          `The response carries a Cache-Control header (\`${cacheControl.slice(0, 80)}\`), so browsers and CDNs know how long they may keep the content without re-fetching. For an HTML page with changing content, even a short lifetime or \`no-cache\` is fine — what matters is that it is set deliberately.`,
+        )
+      : t(
+          'Odpověď neobsahuje hlavičku Cache-Control. Prohlížeče a CDN pak musí hádat, jak dlouho obsah uchovat, a chování se může lišit mezi nimi. Nastavte ji explicitně — u HTML třeba `no-cache` nebo krátké `max-age`, u statických souborů dlouhé s `immutable`.',
+          'The response has no Cache-Control header. Browsers and CDNs then have to guess how long to keep the content, and behaviour can differ between them. Set it explicitly — for HTML something like `no-cache` or a short `max-age`, for static assets a long one with `immutable`.',
+        ),
+  });
+
+  /* --- Znaková sada (charset) --- */
+  const contentTypeHeader = page.headers['content-type'] ?? '';
+  const headerCharsetMatch = /charset\s*=\s*"?([\w-]+)"?/i.exec(contentTypeHeader);
+  const metaCharsetMatch = /<meta[^>]+charset\s*=\s*["']?([\w-]+)/i.exec(page.html.slice(0, 1024));
+  const metaHttpEquivMatch = /<meta[^>]+http-equiv=["']content-type["'][^>]*content=["'][^"']*charset=([\w-]+)/i.exec(
+    page.html.slice(0, 1024),
+  );
+  const declaredCharset = (headerCharsetMatch?.[1] ?? metaCharsetMatch?.[1] ?? metaHttpEquivMatch?.[1] ?? '').toLowerCase();
+  const isUtf8 = declaredCharset === 'utf-8' || declaredCharset === 'utf8';
+  const charsetLabel = t('Znaková sada (charset)', 'Character encoding (charset)');
+  if (!declaredCharset) {
+    checks.push({
+      id: 'charset',
+      label: charsetLabel,
+      status: 'fail',
+      value: t('nedeklarovaná', 'not declared'),
+      weight: 1,
+      detail: t(
+        'Stránka nedeklaruje znakovou sadu — chybí `charset` v hlavičce Content-Type i v `<meta charset>` v prvních 1024 bajtech HTML. Prohlížeč pak musí kódování odhadovat, což u češtiny snadno vede k rozsypaným diakritickým znakům. Doplňte `<meta charset="UTF-8">` jako první tag v `<head>`.',
+        'The page does not declare a character encoding — no `charset` in the Content-Type header and no `<meta charset>` within the first 1024 bytes of HTML. Browsers then have to guess the encoding, which easily garbles accented characters. Add `<meta charset="UTF-8">` as the very first tag in `<head>`.',
+      ),
+    });
+  } else if (!isUtf8) {
+    checks.push({
+      id: 'charset',
+      label: charsetLabel,
+      status: 'warn',
+      value: declaredCharset,
+      weight: 1,
+      detail: t(
+        `Stránka deklaruje znakovou sadu ${declaredCharset} místo doporučeného UTF-8. Starší kódování (např. windows-1250) umí zobrazit češtinu správně, ale komplikuje kopírování textu, vyhledávání a napojení na moderní nástroje, které počítají s UTF-8. Přejděte na \`<meta charset="UTF-8">\` a soubory ulož­te v UTF-8.`,
+        `The page declares the ${declaredCharset} character encoding instead of the recommended UTF-8. Older encodings can display accented text correctly, but complicate copy-pasting, search and integration with modern tools that assume UTF-8. Switch to \`<meta charset="UTF-8">\` and save files as UTF-8.`,
+      ),
+    });
+  } else {
+    checks.push({
+      id: 'charset',
+      label: charsetLabel,
+      status: 'pass',
+      value: 'UTF-8',
+      weight: 1,
+      detail: t(
+        'Stránka deklaruje UTF-8, univerzální znakovou sadu, která bez problémů zobrazí českou diakritiku i libovolný jiný jazyk. Ověřte jen, že je deklarace v prvních 1024 bajtech HTML — prohlížeč jinak stihne začít parsovat dřív, než na ni narazí.',
+        'The page declares UTF-8, the universal character encoding that displays accented characters and any other language without issues. Just make sure the declaration sits within the first 1024 bytes of HTML — otherwise the browser may start parsing before it gets there.',
+      ),
+    });
+  }
+
+  /* --- Vlastní 404 stránka --- */
+  const notFoundLabel = t('Vlastní 404 stránka', 'Custom 404 page');
+  const { notFound } = ctx;
+  if (!notFound.checked) {
+    checks.push({
+      id: 'custom-404',
+      label: notFoundLabel,
+      status: 'unknown',
+      value: t('nepodařilo se ověřit', 'could not verify'),
+      weight: 1,
+      detail: t(
+        'Kontrolu 404 stránky se nepodařilo provést, protože požadavek na neexistující adresu selhal. Ověřte chování webu ručně na libovolné smyšlené adrese. Do skóre se tato kontrola nezapočítává.',
+        'The 404 page check could not run because the request to a non-existent address failed. Verify the behaviour manually on any made-up address. This check does not count towards the score.',
+      ),
+    });
+  } else if (notFound.status !== 404) {
+    checks.push({
+      id: 'custom-404',
+      label: notFoundLabel,
+      status: notFound.redirectedToHome ? 'warn' : 'fail',
+      value: notFound.redirectedToHome
+        ? t('přesměrováno na hlavní stránku', 'redirects to the homepage')
+        : t(`vrací HTTP ${notFound.status}`, `returns HTTP ${notFound.status}`),
+      weight: 1,
+      detail: notFound.redirectedToHome
+        ? t(
+            'Neexistující adresa se nepřesměrovanou 404 hlásí, ale místo toho přesměruje na hlavní stránku. Návštěvník tak neví, že překlep nebo starý odkaz nikam nevede, a vyhledávače mohou takové adresy začít indexovat jako duplicitní obsah hlavní stránky. Vraťte na neexistujících adresách skutečný stavový kód 404.',
+            'A non-existent address does not report a 404 — instead it redirects to the homepage. Visitors have no way to tell that a typo or an old link leads nowhere, and search engines may start indexing such addresses as duplicate homepage content. Return a genuine 404 status code for non-existent addresses.',
+          )
+        : t(
+            `Neexistující adresa vrací HTTP ${notFound.status} místo 404 — jde o takzvané „soft 404". Vyhledávače takovou stránku mohou začít indexovat, i když žádný obsah nenabízí, a plýtvají tak crawl budgetem na prázdné adresy. Nastavte, aby neexistující cesty vracely stavový kód 404 (nebo 410, pokud obsah trvale zmizel).`,
+            `A non-existent address returns HTTP ${notFound.status} instead of 404 — a so-called "soft 404". Search engines may start indexing such a page even though it offers no content, wasting crawl budget on empty addresses. Make sure non-existent paths return a 404 status code (or 410 if the content is permanently gone).`,
+          ),
+    });
+  } else {
+    const hasExplanation = notFound.textLength >= 120;
+    checks.push({
+      id: 'custom-404',
+      label: notFoundLabel,
+      status: hasExplanation ? 'pass' : 'warn',
+      value: hasExplanation ? t('404 s vysvětlením', '404 with an explanation') : t('holé 404', 'bare 404'),
+      weight: 1,
+      detail: hasExplanation
+        ? t(
+            'Neexistující adresa vrací správný stavový kód 404 a stránka obsahuje dost textu na to, aby návštěvníkovi vysvětlila, co se stalo, a nabídla cestu dál (odkaz na homepage, vyhledávání). Je to i signál pro vyhledávače, že adresa opravdu neexistuje.',
+            'A non-existent address correctly returns a 404 status, and the page has enough text to explain to the visitor what happened and offer a way forward (a link to the homepage, search). It also signals to search engines that the address genuinely does not exist.',
+          )
+        : t(
+            'Neexistující adresa vrací správný stavový kód 404, ale stránka je téměř prázdná — pravděpodobně jen výchozí hláška serveru. Vlastní 404 stránka s vysvětlením a odkazem na homepage nebo vyhledávání sníží okamžité opuštění webu po překlepu v adrese.',
+            'A non-existent address correctly returns a 404 status, but the page is nearly empty — likely just the server default message. A custom 404 page with an explanation and a link to the homepage or search reduces immediate bounces after a mistyped address.',
+          ),
+    });
+  }
 
   /* --- Rozbité interní odkazy --- */
   const brokenLabel = t('Rozbité interní odkazy', 'Broken internal links');

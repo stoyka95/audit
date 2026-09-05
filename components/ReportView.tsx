@@ -196,7 +196,7 @@ export default function ReportView({ result, onReset, onRetrySpeed, retrying }: 
         </div>
 
         {/* Pruh kategorií */}
-        <div className="mt-8 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-line bg-line sm:grid-cols-3 lg:grid-cols-6">
+        <div className="mt-8 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-line bg-line sm:grid-cols-3 lg:grid-cols-7">
           {result.categories.map((category) => (
             <div key={category.id} className="bg-surface/70 px-4 py-4">
               <p className="text-[0.68rem] uppercase leading-tight tracking-[0.16em] text-bone-faint">
@@ -298,7 +298,7 @@ export default function ReportView({ result, onReset, onRetrySpeed, retrying }: 
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
         {result.categories.map((category, index) => (
           // Karty jsou po dokončení auditu rozbalené. Report je výsledek, ne rozcestník —
-          // rozklikávat šest kategorií, aby člověk zjistil, co konkrétně nesedí, byla otrava.
+          // rozklikávat každou kategorii zvlášť, aby člověk zjistil, co konkrétně nesedí, byla otrava.
           <CategoryCard key={category.id} category={category} index={index} defaultOpen />
         ))}
       </div>

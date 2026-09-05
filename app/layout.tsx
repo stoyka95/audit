@@ -43,6 +43,7 @@ export const metadata: Metadata = {
     'kontrola SEO online',
     'AEO audit',
     'GEO audit',
+    'test přístupnosti webu',
     'optimalizace pro AI vyhledávání',
     'Core Web Vitals test',
     'PageSpeed Insights česky',

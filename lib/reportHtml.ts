@@ -316,24 +316,26 @@ export function renderDocument(
 
   /* ---------- skóre kategorií ---------- */
 
-  .cats { display: grid; grid-template-columns: repeat(6, 1fr); overflow: hidden; }
-  .cats > div { padding: 12px 12px 13px; border-right: 1px solid var(--line-soft); }
-  .cats > div:last-child { border-right: 0; }
+  /* Počet sloupců nastavuje inline style na .cats — kategorií nemusí být vždy stejně. */
+  .cats { display: grid; overflow: hidden; }
+  .cats > div { padding: 12px 8px 13px; border-right: 1px solid var(--line-soft); }
+  .cats > div:first-child { padding-left: 12px; }
+  .cats > div:last-child { padding-right: 12px; border-right: 0; }
 
-  /* Dvouřádková výška popisku napevno: bez ní se čísla u delších názvů
+  /* Trojřádková výška popisku napevno: bez ní se čísla u delších názvů
      („Rychlost — počítač") propadnou o řádek níž než u ostatních. */
   .cats dt {
     display: block;
-    min-height: 2.4em;
-    font-size: 8px;
+    min-height: 3.2em;
+    font-size: 7.5px;
     text-transform: uppercase;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.08em;
     line-height: 1.2;
     color: var(--faint);
   }
   .cats dd {
     margin: 2px 0 0;
-    font-size: 22px;
+    font-size: 20px;
     font-weight: 650;
     letter-spacing: -0.02em;
     line-height: 1;
@@ -531,7 +533,7 @@ ${
 
 <section>
   <h2>${esc(p.categories)}</h2>
-  <dl class="card cats">
+  <dl class="card cats" style="grid-template-columns:repeat(${result.categories.length},1fr)">
     ${result.categories
       .map((category) => {
         const color = categoryColor(category.scored, category.score);

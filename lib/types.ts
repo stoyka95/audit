@@ -4,7 +4,7 @@ import type { Locale } from './i18n';
 /** Stav jedné kontroly. `unknown` = nepodařilo se ověřit, do skóre se nepočítá. */
 export type CheckStatus = 'pass' | 'warn' | 'fail' | 'unknown';
 
-export type CategoryId = 'speed-mobile' | 'speed-desktop' | 'seo' | 'aeo' | 'geo' | 'tech';
+export type CategoryId = 'speed-mobile' | 'speed-desktop' | 'seo' | 'aeo' | 'geo' | 'tech' | 'a11y';
 
 /** Zařízení, pro které PageSpeed Insights měří. */
 export type PsiStrategy = 'mobile' | 'desktop';
@@ -213,6 +213,18 @@ export interface AuditContext {
   psiDesktop: PageSpeedResult;
   brokenLinks: BrokenLinkScan;
   faviconLive: boolean | null;
+  notFound: NotFoundProbe;
+}
+
+/** Výsledek sondy na náhodnou neexistující adresu — odhalí „soft 404" (stav 200/302 místo 404). */
+export interface NotFoundProbe {
+  /** false = požadavek selhal (síť, timeout) a kontrola se neprovedla. */
+  checked: boolean;
+  status: number | null;
+  /** Délka viditelného textu chybové stránky — rozliší prázdnou stránku od vysvětlující. */
+  textLength: number;
+  /** true = server namísto stavu 404 přesměroval na úvodní stránku. */
+  redirectedToHome: boolean;
 }
 
 export interface JsonLdEntry {

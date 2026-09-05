@@ -217,6 +217,73 @@ export function seoChecks(ctx: AuditContext): CheckResult[] {
     });
   }
 
+  /* --- Vícenásobný canonical --- */
+  const canonicalCount = $('link[rel="canonical"]').length;
+  checks.push({
+    id: 'canonical-multiple',
+    label: t('Počet canonical tagů', 'Number of canonical tags'),
+    status: canonicalCount <= 1 ? 'pass' : 'fail',
+    value:
+      canonicalCount <= 1
+        ? canonicalCount === 1
+          ? t('jeden tag', 'one tag')
+          : t('žádný tag', 'no tag')
+        : t(`${canonicalCount}×`, `${canonicalCount}×`),
+    weight: 2,
+    detail:
+      canonicalCount <= 1
+        ? t(
+            'Stránka má nejvýš jeden tag `<link rel="canonical">`, takže signál není protichůdný. Google podle specifikace bere v úvahu jen jeden canonical na stránku.',
+            'The page has at most one `<link rel="canonical">` tag, so the signal is not contradictory. Google only honours a single canonical per page by specification.',
+          )
+        : t(
+            `Stránka obsahuje ${canonicalCount} tagů \`<link rel="canonical">\` místo jednoho — nejčastěji jeden z pluginu a jeden ručně v šabloně. Google si v takovém případě sám vybere, který použije, a nemusí to být ten zamýšlený. Ponechte v \`<head>\` jen jeden canonical tag.`,
+            `The page contains ${canonicalCount} \`<link rel="canonical">\` tags instead of one — usually one from a plugin and one hardcoded in the template. In that case Google picks whichever it likes, which may not be the intended one. Keep only one canonical tag in \`<head>\`.`,
+          ),
+  });
+
+  /* --- Trackovací parametry v canonical --- */
+  const TRACKING_PARAMS = [
+    'utm_source',
+    'utm_medium',
+    'utm_campaign',
+    'utm_term',
+    'utm_content',
+    'gclid',
+    'fbclid',
+    'msclkid',
+    'ref',
+    'session_id',
+    'sessionid',
+    'phpsessid',
+  ];
+  let canonicalTrackingParams: string[] = [];
+  if (canonical) {
+    try {
+      const canonicalUrl = new URL(canonical, page.finalUrl);
+      canonicalTrackingParams = TRACKING_PARAMS.filter((param) => canonicalUrl.searchParams.has(param));
+    } catch {
+      // Neplatnou canonical URL už hlásí kontrola výše, tady ji jen tiše přeskočíme.
+    }
+  }
+  checks.push({
+    id: 'canonical-params',
+    label: t('Trackovací parametry v canonical', 'Tracking parameters in canonical'),
+    status: canonicalTrackingParams.length === 0 ? 'pass' : 'warn',
+    value: canonicalTrackingParams.length === 0 ? t('čistá URL', 'clean URL') : canonicalTrackingParams.join(', '),
+    weight: 1,
+    detail:
+      canonicalTrackingParams.length === 0
+        ? t(
+            'Kanonická URL neobsahuje žádný z běžných trackovacích parametrů (utm_, gclid, fbclid…). Varianty stejné stránky sdílené s různými kampaněmi se tak správně slijí do jedné indexované adresy.',
+            'The canonical URL contains none of the common tracking parameters (utm_, gclid, fbclid…). Variants of the same page shared with different campaigns correctly collapse into one indexed address.',
+          )
+        : t(
+            `Kanonická URL obsahuje trackovací parametry (${canonicalTrackingParams.join(', ')}), které by v ní neměly být. Canonical má ukazovat na čistou adresu bez parametrů kampaně — jinak různé kampaně na stejný obsah nemusí Google slít do jedné stránky. Odstraňte tyto parametry z hodnoty canonical.`,
+            `The canonical URL contains tracking parameters (${canonicalTrackingParams.join(', ')}) that should not be there. The canonical should point at a clean address without campaign parameters — otherwise Google may not collapse different campaigns for the same content into a single page. Remove these parameters from the canonical value.`,
+          ),
+  });
+
   /* --- Indexovatelnost (meta robots / X-Robots-Tag) --- */
   const directiveSources: { where: string; value: string }[] = [];
   $('meta[name]').each((_, element) => {
@@ -266,6 +333,25 @@ export function seoChecks(ctx: AuditContext): CheckResult[] {
             'The page carries no directive that would block indexing — neither in a meta tag nor in the `X-Robots-Tag` header, so search engines may include it in the results. Re-check this after launching a new site; switching out of staging mode is easy to forget.',
           ),
     meta: sourceLabels.length > 0 ? { kind: 'list', items: sourceLabels } : undefined,
+  });
+
+  /* --- Konflikt canonical + noindex --- */
+  const hasCanonicalNoindexConflict = Boolean(canonical) && noindex;
+  checks.push({
+    id: 'canonical-noindex-conflict',
+    label: t('Konflikt canonical a noindex', 'Canonical vs. noindex conflict'),
+    status: hasCanonicalNoindexConflict ? 'warn' : 'pass',
+    value: hasCanonicalNoindexConflict ? t('protichůdné signály', 'conflicting signals') : t('bez konfliktu', 'no conflict'),
+    weight: 1,
+    detail: hasCanonicalNoindexConflict
+      ? t(
+          'Stránka má zároveň `noindex` a canonical tag. Signály si odporují: `noindex` říká „nezařazuj mě", canonical říká „tohle je ta správná verze, zařaď ji". Google se v takovém případě obvykle řídí `noindex` a canonical ignoruje, jiné vyhledávače na to ale mohou reagovat jinak. Pokud má být stránka mimo index, canonical nemusí být vůbec potřeba; pokud má být indexovaná, odstraňte `noindex`.',
+          'The page carries both `noindex` and a canonical tag. The signals contradict each other: `noindex` says "do not index me", the canonical says "this is the correct version, index it". Google usually follows `noindex` and ignores the canonical in that case, but other software may behave differently. If the page should stay out of the index, the canonical is probably unnecessary; if it should be indexed, remove `noindex`.',
+        )
+      : t(
+          'Stránka nemá zároveň `noindex` a canonical, takže si tyto dva signály neodporují.',
+          'The page does not carry both `noindex` and a canonical at the same time, so these two signals do not contradict each other.',
+        ),
   });
 
   /* --- robots.txt --- */
@@ -323,6 +409,95 @@ export function seoChecks(ctx: AuditContext): CheckResult[] {
         'Soubor robots.txt existuje a neblokuje celý web. Roboti se tak dostanou k obsahu, který má být indexovaný. Při každé změně pravidel si výsledek ověřte v testeru robots.txt v Search Console.',
         'The robots.txt file exists and does not block the whole site, so crawlers can reach the content meant to be indexed. Verify the result in the Search Console robots.txt tester whenever you change the rules.',
       ),
+    });
+  }
+
+  /* --- robots.txt: blokace CSS/JS --- */
+  const ASSET_BLOCK_PATTERNS = [/\.css(\?|$)/i, /\.js(\?|$)/i, /\/wp-content\//i, /\/wp-includes\//i, /\/_next\//i];
+  const blockedAssetRules = new Set<string>();
+  for (const group of robots.groups) {
+    for (const rule of group.disallow) {
+      if (rule && ASSET_BLOCK_PATTERNS.some((pattern) => pattern.test(rule))) blockedAssetRules.add(rule);
+    }
+  }
+  const assetBlockLabel = t('Blokace CSS/JS v robots.txt', 'CSS/JS blocking in robots.txt');
+  if (robotsFailed) {
+    checks.push({
+      id: 'robots-blocks-assets',
+      label: assetBlockLabel,
+      status: 'unknown',
+      value: unverifiedValue,
+      weight: 1,
+      detail: t(
+        'Soubor robots.txt se nepodařilo stáhnout, takže nelze ověřit, jestli neblokuje CSS nebo JavaScript. Do skóre se tato kontrola nezapočítává.',
+        'The robots.txt file could not be downloaded, so it is impossible to verify whether it blocks CSS or JavaScript. This check does not count towards the score.',
+      ),
+    });
+  } else {
+    checks.push({
+      id: 'robots-blocks-assets',
+      label: assetBlockLabel,
+      status: blockedAssetRules.size === 0 ? 'pass' : 'fail',
+      value: blockedAssetRules.size === 0 ? t('neblokuje', 'not blocked') : [...blockedAssetRules].slice(0, 3).join(', '),
+      weight: 1,
+      detail:
+        blockedAssetRules.size === 0
+          ? t(
+              'robots.txt neblokuje styly ani skripty. Google si tak může stránku vykreslit celou, přesně jak ji vidí návštěvník, a správně posoudit i mobilní použitelnost.',
+              'robots.txt does not block styles or scripts, so Google can render the page in full, exactly as a visitor sees it, and correctly judge mobile usability too.',
+            )
+          : t(
+              `robots.txt blokuje pravidly (${[...blockedAssetRules].join(', ')}) přístup ke stylům nebo skriptům. Googlebot pak stránku nevidí tak, jak ji vidí návštěvník, a může chybně vyhodnotit rozvržení nebo mobilní použitelnost jako horší, než ve skutečnosti je. Odstraňte tato pravidla nebo je zúžete jen na skutečně citlivé cesty.`,
+              `robots.txt blocks access to styles or scripts with these rules (${[...blockedAssetRules].join(', ')}). Googlebot then does not see the page the way a visitor does and may misjudge the layout or mobile usability as worse than it actually is. Remove these rules or narrow them to genuinely sensitive paths only.`,
+            ),
+    });
+  }
+
+  /* --- robots.txt: Crawl-delay --- */
+  const crawlDelayMatch = /crawl-delay\s*:\s*([\d.]+)/i.exec(robots.raw);
+  const crawlDelay = crawlDelayMatch ? Number(crawlDelayMatch[1]) : null;
+  const crawlDelayLabel = t('Crawl-delay v robots.txt', 'Crawl-delay in robots.txt');
+  if (robotsFailed) {
+    checks.push({
+      id: 'robots-crawl-delay',
+      label: crawlDelayLabel,
+      status: 'unknown',
+      value: unverifiedValue,
+      weight: 1,
+      detail: t(
+        'Soubor robots.txt se nepodařilo stáhnout, takže nelze ověřit direktivu Crawl-delay. Do skóre se tato kontrola nezapočítává.',
+        'The robots.txt file could not be downloaded, so the Crawl-delay directive could not be checked. This check does not count towards the score.',
+      ),
+    });
+  } else if (crawlDelay === null) {
+    checks.push({
+      id: 'robots-crawl-delay',
+      label: crawlDelayLabel,
+      status: 'pass',
+      value: t('nenastaveno', 'not set'),
+      weight: 1,
+      detail: t(
+        'robots.txt neobsahuje direktivu Crawl-delay, takže roboti, kteří ji respektují (Google ji ignoruje, Bing a Seznam ano), procházejí web bez umělého zpomalení.',
+        'robots.txt has no Crawl-delay directive, so crawlers that honour it (Google ignores it, Bing and other engines do not) crawl the site without an artificial slowdown.',
+      ),
+    });
+  } else {
+    checks.push({
+      id: 'robots-crawl-delay',
+      label: crawlDelayLabel,
+      status: crawlDelay > 10 ? 'warn' : 'pass',
+      value: t(`${crawlDelay} s`, `${crawlDelay} s`),
+      weight: 1,
+      detail:
+        crawlDelay > 10
+          ? t(
+              `Direktiva Crawl-delay je nastavená na ${crawlDelay} vteřin, což je hodně — při stovkách stránek by procházení celého webu trvalo hodiny až dny. Google ji ignoruje, ale Bing a další roboti se jí řídí a s tak vysokou hodnotou objevují nový obsah pomalu. Snižte hodnotu, nebo ji úplně odstraňte a rychlost procházení řešte přes Search Console.`,
+              `The Crawl-delay directive is set to ${crawlDelay} seconds, which is high — with hundreds of pages, crawling the whole site would take hours or days. Google ignores it, but Bing and other crawlers honour it and will discover new content slowly at such a high value. Lower it, or remove it entirely and manage crawl rate through Search Console instead.`,
+            )
+          : t(
+              `Direktiva Crawl-delay je nastavená na ${crawlDelay} vteřin, což je rozumná hodnota, která výrazně nezpomalí objevování nového obsahu.`,
+              `The Crawl-delay directive is set to ${crawlDelay} seconds, a reasonable value that will not meaningfully slow down discovery of new content.`,
+            ),
     });
   }
 
@@ -384,6 +559,126 @@ export function seoChecks(ctx: AuditContext): CheckResult[] {
         'We found no XML sitemap, neither at /sitemap.xml nor referenced from robots.txt. Without one, crawlers have to discover pages by following links, which delays indexing of new content. Generate a sitemap and add it to robots.txt and to Search Console.',
       ),
     });
+  }
+
+  /* --- Sitemapa do hloubky: obsah --- */
+  // Analýza dává smysl jen tehdy, když se podařilo stáhnout platné XML — jinak
+  // by šlo o zdvojení nálezu, který už hlásí kontrola výše.
+  if (sitemapLooksValid) {
+    const isSitemapIndex = /<sitemapindex/i.test(sitemap.text);
+    const locMatches = [...sitemap.text.matchAll(/<loc>\s*([^<\s][^<]*?)\s*<\/loc>/gi)].map((m) => m[1].trim());
+    const totalLocs = locMatches.length;
+    const nonAbsolute = locMatches.filter((loc) => !/^https?:\/\//i.test(loc)).length;
+    // fetchText ořízne text na 200 000 znaků — blízko limitu čísla nevěřit doslova.
+    const looksTruncated = sitemap.text.length >= 199_000;
+    const entryLabel = isSitemapIndex
+      ? t('dílčích sitemap', 'sub-sitemaps')
+      : t('URL adres', 'URLs');
+    const urlsLabel = t('Obsah sitemapy (počet a formát adres)', 'Sitemap content (URL count and format)');
+
+    if (totalLocs === 0) {
+      checks.push({
+        id: 'sitemap-urls',
+        label: urlsLabel,
+        status: 'warn',
+        value: t('žádné položky <loc>', 'no <loc> entries'),
+        weight: 1,
+        detail: t(
+          'Sitemapa má platnou XML strukturu, ale neobsahuje žádnou položku `<loc>`. Prázdná sitemapa robotům nepomůže nic objevit. Zkontrolujte generátor sitemapy.',
+          'The sitemap has valid XML structure but contains no `<loc>` entries. An empty sitemap does not help crawlers discover anything. Check the sitemap generator.',
+        ),
+      });
+    } else if (nonAbsolute > 0) {
+      checks.push({
+        id: 'sitemap-urls',
+        label: urlsLabel,
+        status: 'fail',
+        value: t(`${nonAbsolute} z ${totalLocs} relativních`, `${nonAbsolute} of ${totalLocs} relative`),
+        weight: 1,
+        detail: t(
+          `${nonAbsolute} položek \`<loc>\` v sitemapě obsahuje relativní adresu místo absolutní URL s protokolem a doménou. Specifikace sitemap.org relativní adresy nepovoluje a roboti je mohou ignorovat. Opravte generátor, aby vypisoval plné adresy (https://…).`,
+          `${nonAbsolute} \`<loc>\` entries in the sitemap contain a relative address instead of an absolute URL with protocol and domain. The sitemaps.org specification does not allow relative addresses, and crawlers may ignore them. Fix the generator to output full addresses (https://…).`,
+        ),
+      });
+    } else if (totalLocs > 50_000 && !looksTruncated) {
+      checks.push({
+        id: 'sitemap-urls',
+        label: urlsLabel,
+        status: 'fail',
+        value: t(`${totalLocs} ${entryLabel}`, `${totalLocs} ${entryLabel}`),
+        weight: 1,
+        detail: t(
+          `Sitemapa obsahuje ${totalLocs} položek, což překračuje limit specifikace 50 000 na jeden soubor. Vyhledávače soubor nad limitem odmítnou celý. Rozdělte ho na víc sitemap a odkažte na ně přes sitemap index.`,
+          `The sitemap contains ${totalLocs} entries, exceeding the specification's 50,000-per-file limit. Search engines reject a file over the limit entirely. Split it into multiple sitemaps and reference them through a sitemap index.`,
+        ),
+      });
+    } else {
+      checks.push({
+        id: 'sitemap-urls',
+        label: urlsLabel,
+        status: 'pass',
+        value: looksTruncated
+          ? t(`alespoň ${totalLocs} ${entryLabel}`, `at least ${totalLocs} ${entryLabel}`)
+          : t(`${totalLocs} ${entryLabel}`, `${totalLocs} ${entryLabel}`),
+        weight: 1,
+        detail: looksTruncated
+          ? t(
+              `Sitemapa obsahuje přinejmenším ${totalLocs} položek s absolutními URL — soubor je ale větší, než kolik audit stahuje pro kontrolu (200 kB), takže přesný počet a limit 50 000 položek jsme neověřili celý. Adresy, které jsme viděli, jsou v pořádku.`,
+              `The sitemap contains at least ${totalLocs} entries with absolute URLs — the file is larger than what the audit downloads for this check (200 kB), so we could not verify the exact count or the 50,000-entry limit in full. The addresses we did see are correctly formed.`,
+            )
+          : t(
+              `Sitemapa obsahuje ${totalLocs} ${entryLabel} se správnými absolutními URL a nepřekračuje limit 50 000 položek na soubor.`,
+              `The sitemap contains ${totalLocs} ${entryLabel} with correct absolute URLs and does not exceed the 50,000-entries-per-file limit.`,
+            ),
+      });
+    }
+
+    /* --- Sitemapa do hloubky: lastmod --- */
+    if (totalLocs > 0) {
+      const lastmodMatches = [...sitemap.text.matchAll(/<lastmod>\s*([^<]*?)\s*<\/lastmod>/gi)].map((m) => m[1].trim());
+      const validLastmodPattern = /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2})?(\.\d+)?(Z|[+-]\d{2}:?\d{2})?)?$/;
+      const validLastmod = lastmodMatches.filter((value) => validLastmodPattern.test(value)).length;
+      const lastmodLabel = t('Datum poslední úpravy (lastmod)', 'Last-modified date (lastmod)');
+
+      if (lastmodMatches.length === 0) {
+        checks.push({
+          id: 'sitemap-lastmod',
+          label: lastmodLabel,
+          status: 'warn',
+          value: t('chybí u všech položek', 'missing on every entry'),
+          weight: 1,
+          detail: t(
+            'Žádná položka v sitemapě neobsahuje `<lastmod>`. Bez data poslední úpravy Google neví, které stránky se od posledního procházení změnily, a musí je znovu stahovat všechny, aby to zjistil. Doplňte `<lastmod>` s datem skutečné poslední úpravy obsahu.',
+            'No entry in the sitemap includes `<lastmod>`. Without a last-modified date, Google cannot tell which pages changed since the last crawl and has to re-download all of them to find out. Add `<lastmod>` with the date content was actually last changed.',
+          ),
+        });
+      } else if (validLastmod < lastmodMatches.length) {
+        const invalidCount = lastmodMatches.length - validLastmod;
+        checks.push({
+          id: 'sitemap-lastmod',
+          label: lastmodLabel,
+          status: 'warn',
+          value: t(`${invalidCount} v neplatném formátu`, `${invalidCount} in an invalid format`),
+          weight: 1,
+          detail: t(
+            `${invalidCount} hodnot \`<lastmod>\` nemá platný formát W3C Datetime (např. 2026-08-27 nebo 2026-08-27T10:00:00+02:00). Vyhledávače neplatné datum ignorují, jako by tam nebylo. Opravte formát v generátoru sitemapy.`,
+            `${invalidCount} \`<lastmod>\` values are not in valid W3C Datetime format (e.g. 2026-08-27 or 2026-08-27T10:00:00+02:00). Search engines ignore an invalid date as if it were not there. Fix the format in the sitemap generator.`,
+          ),
+        });
+      } else {
+        checks.push({
+          id: 'sitemap-lastmod',
+          label: lastmodLabel,
+          status: 'pass',
+          value: t(`${lastmodMatches.length} z ${totalLocs}`, `${lastmodMatches.length} of ${totalLocs}`),
+          weight: 1,
+          detail: t(
+            'Položky v sitemapě mají `<lastmod>` ve správném formátu. Google podle něj pozná, které stránky se od posledního procházení změnily, a nemusí stahovat znovu vše — šetří to crawl budget hlavně u větších webů.',
+            'Entries in the sitemap carry `<lastmod>` in the correct format. Google uses it to tell which pages changed since the last crawl and does not have to re-download everything — this saves crawl budget, especially on larger sites.',
+          ),
+        });
+      }
+    }
   }
 
   /* --- HTTPS a mixed content --- */
@@ -549,6 +844,81 @@ export function seoChecks(ctx: AuditContext): CheckResult[] {
             ),
     });
   }
+
+  /* --- Open Graph --- */
+  const ogTitle = ($('meta[property="og:title"]').attr('content') ?? '').trim();
+  const ogDescription = ($('meta[property="og:description"]').attr('content') ?? '').trim();
+  const ogImage = ($('meta[property="og:image"]').attr('content') ?? '').trim();
+  const ogUrl = ($('meta[property="og:url"]').attr('content') ?? '').trim();
+  const ogPresentCount = [ogTitle, ogDescription, ogImage].filter(Boolean).length;
+  const ogImageAbsolute = ogImage ? /^https?:\/\//i.test(ogImage) : true;
+  const ogLabel = t('Open Graph (náhled při sdílení)', 'Open Graph (social share preview)');
+
+  const ogMissing: string[] = [];
+  if (!ogTitle) ogMissing.push('og:title');
+  if (!ogDescription) ogMissing.push('og:description');
+  if (!ogImage) ogMissing.push('og:image');
+  if (!ogUrl) ogMissing.push('og:url');
+
+  checks.push({
+    id: 'open-graph',
+    label: ogLabel,
+    status: ogPresentCount === 3 ? (ogImageAbsolute ? 'pass' : 'warn') : ogPresentCount > 0 ? 'warn' : 'fail',
+    value:
+      ogPresentCount === 3
+        ? t('kompletní', 'complete')
+        : t(`${ogPresentCount} ze 3 klíčových`, `${ogPresentCount} of 3 key tags`),
+    weight: 2,
+    detail:
+      ogPresentCount === 3
+        ? ogImageAbsolute
+          ? t(
+              'Stránka má vyplněné og:title, og:description i og:image, takže sdílení odkazu na Facebooku, LinkedInu, WhatsAppu nebo Slacku zobrazí hezký náhled místo holé adresy. Doplňte ještě og:url a og:type, pokud tam chybí.',
+              'The page has og:title, og:description and og:image filled in, so sharing the link on Facebook, LinkedIn, WhatsApp or Slack shows a proper preview instead of a bare address. Add og:url and og:type too if they are missing.',
+            )
+          : t(
+              `Klíčové Open Graph tagy jsou vyplněné, ale og:image (${ogImage}) není absolutní URL. Sociální sítě si obrázek stahují samy a s relativní cestou ho často nenajdou. Uveďte plnou adresu včetně https://.`,
+              `The key Open Graph tags are filled in, but og:image (${ogImage}) is not an absolute URL. Social networks fetch the image themselves and often fail to find it with a relative path. Provide the full address including https://.`,
+            )
+        : ogPresentCount > 0
+          ? t(
+              `Open Graph tagy jsou jen částečně vyplněné, chybí: ${ogMissing.filter((tag) => tag !== 'og:url').join(', ')}. Bez kompletní sady sociální sítě doplní chybějící údaje samy, obvykle horším výběrem (třeba náhodný obrázek ze stránky). Doplňte všechny tři: og:title, og:description a og:image.`,
+              `Open Graph tags are only partially filled in; missing: ${ogMissing.filter((tag) => tag !== 'og:url').join(', ')}. Without the complete set, social networks fill in the missing pieces themselves, usually with a worse choice (e.g. a random image from the page). Add all three: og:title, og:description and og:image.`,
+            )
+          : t(
+              'Stránka nemá žádné Open Graph meta tagy. Při sdílení odkazu na sociálních sítích a v aplikacích jako Slack nebo WhatsApp se zobrazí jen holá adresa nebo náhodně vybraný obsah stránky. Doplňte alespoň og:title, og:description a og:image (ideálně 1200×630 px) do `<head>`.',
+              'The page has no Open Graph meta tags. Sharing the link on social networks and in apps like Slack or WhatsApp shows only a bare address or randomly picked page content. Add at least og:title, og:description and og:image (ideally 1200×630 px) to `<head>`.',
+            ),
+  });
+
+  /* --- Twitter Card --- */
+  const twitterCard = ($('meta[name="twitter:card"]').attr('content') ?? '').trim().toLowerCase();
+  const VALID_TWITTER_CARDS = ['summary', 'summary_large_image', 'app', 'player'];
+  const twitterCardValid = VALID_TWITTER_CARDS.includes(twitterCard);
+  const ogFallbackAvailable = Boolean(ogTitle && ogImage);
+  const twitterLabel = t('Twitter / X Card', 'Twitter / X Card');
+
+  checks.push({
+    id: 'twitter-card',
+    label: twitterLabel,
+    status: twitterCardValid ? 'pass' : ogFallbackAvailable ? 'warn' : 'fail',
+    value: twitterCard ? twitterCard : ogFallbackAvailable ? t('chybí, ale je fallback na OG', 'missing, but OG fallback exists') : t('chybí', 'missing'),
+    weight: 1,
+    detail: twitterCardValid
+      ? t(
+          `Meta tag twitter:card je nastavený na „${twitterCard}", takže X (dřívější Twitter) zobrazí u sdíleného odkazu vlastní naformátovaný náhled.`,
+          `The twitter:card meta tag is set to "${twitterCard}", so X (formerly Twitter) shows its own formatted preview for the shared link.`,
+        )
+      : ogFallbackAvailable
+        ? t(
+            'Stránka nemá tag twitter:card, ale má vyplněné og:title a og:image, ze kterých si X (Twitter) náhled poskládá samo. Explicitní twitter:card je ale spolehlivější a umožní zvolit velký obrázkový formát (summary_large_image). Doplňte `<meta name="twitter:card" content="summary_large_image">`.',
+            'The page has no twitter:card tag, but og:title and og:image are filled in, so X (Twitter) will assemble a preview from those on its own. An explicit twitter:card is more reliable, though, and lets you choose the large-image format (summary_large_image). Add `<meta name="twitter:card" content="summary_large_image">`.',
+          )
+        : t(
+            'Stránka nemá ani twitter:card, ani Open Graph tagy, ze kterých by si X (Twitter) náhled poskládal. Sdílený odkaz se zobrazí bez náhledu. Doplňte `<meta name="twitter:card" content="summary_large_image">` spolu s Open Graph tagy.',
+            'The page has neither a twitter:card tag nor Open Graph tags for X (Twitter) to build a preview from. The shared link will show with no preview. Add `<meta name="twitter:card" content="summary_large_image">` along with Open Graph tags.',
+          ),
+  });
 
   /* --- lang --- */
   const lang = ($('html').attr('lang') ?? '').trim();

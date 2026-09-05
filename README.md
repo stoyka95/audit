@@ -1,6 +1,6 @@
-# Audit webu — Rychlost / SEO / AEO / GEO / Správnost
+# Audit webu — Rychlost / SEO / AEO / GEO / Správnost / Přístupnost
 
-Stateless webová aplikace: vložíte URL, nástroj spustí přes třicet automatických kontrol a zobrazí report v šesti kategoriích (rychlost se hodnotí zvlášť pro mobil a pro počítač).
+Stateless webová aplikace: vložíte URL, nástroj spustí přes padesát automatických kontrol a zobrazí report v sedmi kategoriích (rychlost se hodnotí zvlášť pro mobil a pro počítač).
 
 **Všechna doporučení jsou statická a pravidly řízená** — žádný text negeneruje jazykový model. Každý závěr je `if/else` navázaný na konkrétní naměřenou hodnotu.
 
@@ -10,10 +10,11 @@ Stateless webová aplikace: vložíte URL, nástroj spustí přes třicet automa
 |---|---|
 | **Rychlost — mobil** | Performance skóre, LCP, INP (reálná data) s fallbackem na TBT, samostatné TBT, CLS, TTFB |
 | **Rychlost — počítač** | Totéž měřené se `strategy=desktop`; TTFB se boduje jen u mobilu, je to vlastnost serveru |
-| **SEO** | Indexovatelnost (`noindex`), title, meta description, H1, hierarchie nadpisů, canonical, robots.txt, sitemapa, mixed content, alt atributy, JSON-LD, `lang` |
+| **SEO** | Indexovatelnost (`noindex`), title, meta description, H1, hierarchie nadpisů, canonical (vč. duplicit, konfliktu s noindex a trackovacích parametrů), robots.txt (vč. blokace CSS/JS a Crawl-delay), sitemapa (vč. počtu URL a `lastmod`), mixed content, alt atributy, JSON-LD, Open Graph, Twitter Card, `lang` |
 | **AEO** | FAQPage / HowTo schéma, otázkové nadpisy, délka první odpovědi, hloubka obsahu, seznamy a tabulky, délka odstavců |
-| **GEO** | `/llms.txt`, pravidla pro 10 AI botů (trénovací vs. vyhledávací), odkazy na entitní profily, signál aktuálnosti obsahu |
-| **Správnost** | Meta viewport, favicon, bezpečnostní hlavičky, rozbité interní odkazy (max. 15) |
+| **GEO** | `/llms.txt`, pravidla pro 10 AI botů (trénovací vs. vyhledávací), odkazy na entitní profily, kontaktní údaje a autorství obsahu (E-E-A-T), signál aktuálnosti obsahu |
+| **Správnost** | Meta viewport, favicon, charset, HSTS, komprese odpovědi, Cache-Control, vlastní 404 stránka, bezpečnostní hlavičky, rozbité interní odkazy (max. 15) |
+| **Přístupnost** | Sémantické landmarky (main/nav/header/footer), odkaz „přeskočit na obsah", popisky formulářových polí, přístupné názvy odkazů a tlačítek, `aria-hidden` bez skrytí z tabulátoru, kladné hodnoty `tabindex` |
 
 ## Tech stack
 
@@ -90,7 +91,7 @@ Překlady žijí na dvou místech a je to záměr:
   reportu). Běžný slovník; angličtina je typovaná podle češtiny (`UiDict = typeof cs`),
   takže vynechaný klíč neprojde překladem.
 * **Přímo u kontrol** — každá kontrola volá `t('česky', 'anglicky')` v místě, kde se text
-  vybírá. Kontrol je přes třicet a většina má tři až čtyři varianty podle naměřené hodnoty;
+  vybírá. Kontrol je přes padesát a většina má tři až čtyři varianty podle naměřené hodnoty;
   se vzdálenou mapou klíčů by se prahy a texty časem rozešly a nikdo by si toho nevšiml.
   Takhle je při úpravě prahu překlad na očích.
 
@@ -247,7 +248,7 @@ Barvy jsou vedené jako CSS proměnné (`--c-*`) v `app/globals.css` a Tailwind 
 
 **Kategorie.** Skóre = vážený průměr přes ověřené kontroly. Když je ověřeno méně než 60 % váhy kategorie, kategorie se označí jako nehodnocená a zobrazí `—` místo čísla, které by stálo na příliš malém vzorku. Výpadek PageSpeed Insights tak nemůže vyrobit „Rychlost 100" z jediné úspěšné metriky.
 
-**Celkem.** Vážený průměr kategorií — SEO 30 %, Rychlost 25 % (mobil 15 %, počítač 10 %), AEO 15 %, GEO 15 %, Správnost 15 %. Bez těchto vah by prostý průměr rozbil váhy uvnitř kategorií: AEO má součet vah 7 a SEO 26, takže jedna nice-to-have kontrola v AEO by trestala víc než chybějící `<title>`. Nehodnocené kategorie se z průměru renormalizují pryč a report v hlavičce uvede, z kolika kategorií skóre vzniklo a kolik procent kontrol se podařilo ověřit.
+**Celkem.** Vážený průměr kategorií — SEO 25 %, Rychlost 25 % (mobil 15 %, počítač 10 %), GEO 13 %, Správnost 13 %, AEO 12 %, Přístupnost 12 %. Bez těchto vah by prostý průměr rozbil váhy uvnitř kategorií: AEO má výrazně nižší součet vah nastavených kontrol než SEO, takže jedna nice-to-have kontrola v AEO by trestala víc než chybějící `<title>`. Nehodnocené kategorie se z průměru renormalizují pryč a report v hlavičce uvede, z kolika kategorií skóre vzniklo a kolik procent kontrol se podařilo ověřit.
 
 **Fatální nálezy zastropují skóre.** `noindex`, `Disallow: /` pro všechny roboty, chybějící HTTPS a odpověď HTTP ≥ 400 znamenají, že web ve vyhledávání prakticky není. Celkové skóre se v takovém případě zastropuje na 35 bodech a nad reportem se zobrazí červený pruh — bez toho by web s `Disallow: /` dostal 91 bodů a hodnocení „Dobré".
 

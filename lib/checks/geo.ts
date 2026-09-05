@@ -30,9 +30,12 @@ const ENTITY_PATTERNS: { domain: string; label: string }[] = [
   { domain: 'crunchbase.com', label: 'Crunchbase' },
 ];
 
+const CONTACT_LINK_PATTERN = /kontakt|contact-us|\/contact\b|napi[sš]te? n[áa]m/i;
+const ICO_PATTERN = /\bIČO?\s*:?\s*\d{6,9}\b/i;
+
 export function geoChecks(ctx: AuditContext): CheckResult[] {
   const t = translator(ctx.locale);
-  const { $, llms, robots, robotsFailed } = ctx;
+  const { $, llms, robots, robotsFailed, jsonLd } = ctx;
   const checks: CheckResult[] = [];
 
   /* --- llms.txt --- */
@@ -204,6 +207,85 @@ export function geoChecks(ctx: AuditContext): CheckResult[] {
             ),
     meta: entityLabels.length > 0 ? { kind: 'list', items: [...foundEntities.values()].slice(0, 5) } : undefined,
   });
+
+  /* --- E-E-A-T: kontaktní údaje --- */
+  const hasMailto = $('a[href^="mailto:"]').length > 0;
+  const hasTel = $('a[href^="tel:"]').length > 0;
+  const hasContactLink = $('a').toArray().some((element) => {
+    const node = $(element);
+    const haystack = `${node.text()} ${node.attr('href') ?? ''}`;
+    return CONTACT_LINK_PATTERN.test(haystack);
+  });
+  const hasIco = ICO_PATTERN.test($('body').text());
+  const contactSignals = [hasMailto, hasTel, hasContactLink, hasIco].filter(Boolean).length;
+  const contactLabel = t('Dohledatelné kontaktní údaje', 'Findable contact information');
+
+  checks.push({
+    id: 'eeat-contact',
+    label: contactLabel,
+    status: contactSignals >= 2 ? 'pass' : contactSignals === 1 ? 'warn' : 'fail',
+    value: t(`${contactSignals} ze 4 signálů`, `${contactSignals} of 4 signals`),
+    weight: 1,
+    detail:
+      contactSignals >= 2
+        ? t(
+            'Stránka nabízí víc než jeden způsob, jak se spojit s provozovatelem (e-mail, telefon, odkaz na kontakt nebo IČO v textu). Jazykové modely i lidé si tak snáz ověří, že za webem stojí reálný subjekt — jeden ze základních signálů důvěryhodnosti (E-E-A-T).',
+            'The page offers more than one way to reach the operator (email, phone, a contact link, or a company ID in the text). Both language models and people can more easily verify that a real entity stands behind the site — one of the basic trust signals (E-E-A-T).',
+          )
+        : contactSignals === 1
+          ? t(
+              'Stránka nabízí jen jeden slabý signál kontaktu (typicky odkaz „Kontakt" bez viditelného e-mailu nebo telefonu přímo v HTML). Doplňte klikatelný `mailto:` nebo `tel:` odkaz a u firemního webu i IČO — zvyšuje to důvěryhodnost pro návštěvníky i pro AI, které hledá ověřitelné údaje o provozovateli.',
+              'The page offers only one weak contact signal (typically a "Contact" link with no email or phone visible directly in the HTML). Add a clickable `mailto:` or `tel:` link, and for a business site also a company ID — it raises trust for visitors and for AI systems looking for verifiable operator details.',
+            )
+          : t(
+              'Na stránce jsme nenašli žádný kontaktní signál — žádný `mailto:` nebo `tel:` odkaz, žádný odkaz na kontaktní stránku ani IČO v textu. Weby bez dohledatelného provozovatele mají u AI systémů i u lidí nižší důvěryhodnost. Doplňte kontaktní údaje, ideálně do patičky, aby byly na každé stránce.',
+              'We found no contact signal on the page at all — no `mailto:` or `tel:` link, no link to a contact page, and no company ID in the text. Sites with no findable operator are trusted less by both AI systems and people. Add contact details, ideally in the footer so they appear on every page.',
+            ),
+  });
+
+  /* --- E-E-A-T: autorství a vydavatel --- */
+  const metaAuthor = ($('meta[name="author"]').attr('content') ?? '').trim();
+  const relAuthor = $('link[rel="author"], a[rel="author"]').length > 0;
+  const hasJsonLdAuthor = jsonLd.some((entry) => Boolean((entry.data as Record<string, unknown>).author));
+  const authorLabel = t('Autorství a vydavatel obsahu', 'Content authorship and publisher');
+
+  if (metaAuthor || hasJsonLdAuthor) {
+    checks.push({
+      id: 'eeat-author',
+      label: authorLabel,
+      status: 'pass',
+      value: hasJsonLdAuthor ? t('JSON-LD author', 'JSON-LD author') : t('meta author', 'meta author'),
+      weight: 1,
+      detail: t(
+        'Stránka uvádí autora nebo vydavatele obsahu strojově čitelně (přes JSON-LD nebo meta tag author). U redakčního obsahu je to jeden ze základních signálů, podle kterých AI vyhledávače posuzují, kdo za textem stojí a jestli mu mají věřit.',
+        'The page states the content author or publisher in a machine-readable way (via JSON-LD or a meta author tag). For editorial content this is one of the basic signals AI search systems use to judge who is behind the text and whether to trust it.',
+      ),
+    });
+  } else if (relAuthor) {
+    checks.push({
+      id: 'eeat-author',
+      label: authorLabel,
+      status: 'warn',
+      value: t('jen rel="author" odkaz', 'only a rel="author" link'),
+      weight: 1,
+      detail: t(
+        'Stránka odkazuje na autora přes `rel="author"`, ale nemá strojově čitelné jméno v meta tagu ani v JSON-LD. Doplňte `<meta name="author" content="…">` nebo vlastnost `author` ve schématu Article/BlogPosting.',
+        'The page links to the author via `rel="author"`, but has no machine-readable name in a meta tag or JSON-LD. Add `<meta name="author" content="…">` or an `author` property in an Article/BlogPosting schema.',
+      ),
+    });
+  } else {
+    checks.push({
+      id: 'eeat-author',
+      label: authorLabel,
+      status: 'fail',
+      value: t('chybí', 'missing'),
+      weight: 1,
+      detail: t(
+        'Stránka neuvádí autora ani vydavatele obsahu žádným strojově čitelným způsobem. U obsahových a poradenských stránek to je zdroj nedůvěry — nejde ověřit, kdo text napsal a jestli má potřebnou odbornost. Doplňte `<meta name="author">` nebo vlastnost `author`/`publisher` ve strukturovaných datech.',
+        'The page states no author or publisher of the content in any machine-readable way. For content and advice pages this is a source of mistrust — there is no way to verify who wrote the text or whether they have the relevant expertise. Add `<meta name="author">` or an `author`/`publisher` property in structured data.',
+      ),
+    });
+  }
 
   /* --- Aktuálnost obsahu --- */
   checks.push(freshnessCheck(ctx, t));

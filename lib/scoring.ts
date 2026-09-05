@@ -125,14 +125,15 @@ export function auditConfidence(categories: CategoryResult[]): number {
  * víc než chybějící title.
  */
 export const CATEGORY_WEIGHT: Record<CategoryId, number> = {
-  seo: 30,
+  seo: 25,
   // Rychlost dohromady 25 jako dřív, jen rozdělená. Mobil váží víc, protože
   // Google indexuje mobile-first a většina návštěv chodí z telefonu.
   'speed-mobile': 15,
   'speed-desktop': 10,
-  aeo: 15,
-  geo: 15,
-  tech: 15,
+  aeo: 12,
+  geo: 13,
+  tech: 13,
+  a11y: 12,
 };
 
 /** Vážený průměr přes hodnocené kategorie; nehodnocené se renormalizují pryč. */

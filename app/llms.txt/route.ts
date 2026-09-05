@@ -12,16 +12,16 @@ const BODY = `# Audit webu
 > generativní vyhledávače) libovolné veřejné adresy. Report je pravidly
 > řízený — žádný text negeneruje jazykový model.
 
-Vložte URL na https://audit.semakod.cz a nástroj vrátí skóre v pěti
+Vložte URL na https://audit.semakod.cz a nástroj vrátí skóre v šesti
 kategoriích: Rychlost (Core Web Vitals přes Google PageSpeed Insights),
-SEO, AEO, GEO a Správnost. Zdarma, bez registrace, výsledky se nikam
-neukládají.
+SEO, AEO, GEO, Správnost a Přístupnost. Zdarma, bez registrace, výsledky
+se nikam neukládají.
 
 ## Klíčové stránky
 
 - [Audit webu](https://audit.semakod.cz/): zadání URL a spuštění auditu
 - [Jak to funguje](https://audit.semakod.cz/#jak-to-funguje): čtyři kroky auditu
-- [Co kontrolujeme](https://audit.semakod.cz/#co-kontrolujeme): přes třicet kontrol v pěti kategoriích
+- [Co kontrolujeme](https://audit.semakod.cz/#co-kontrolujeme): přes padesát kontrol v šesti kategoriích
 - [Doporučení](https://audit.semakod.cz/#doporuceni): obecné rady k výsledku
 - [FAQ](https://audit.semakod.cz/#faq): časté dotazy ke skórování a metodice
 

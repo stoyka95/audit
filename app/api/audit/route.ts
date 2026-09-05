@@ -21,6 +21,7 @@ import { seoChecks } from '@/lib/checks/seo';
 import { aeoChecks } from '@/lib/checks/aeo';
 import { geoChecks } from '@/lib/checks/geo';
 import { techChecks } from '@/lib/checks/tech';
+import { a11yChecks } from '@/lib/checks/a11y';
 import type {
   AuditContext,
   AuditPayload,
@@ -28,6 +29,7 @@ import type {
   BrokenLinkRow,
   BrokenLinkScan,
   LocalizedAudit,
+  NotFoundProbe,
   TextResource,
 } from '@/lib/types';
 
@@ -107,6 +109,19 @@ async function scanInternalLinks(
   };
 }
 
+/** Délka viditelného textu v `<body>` bez skriptů a stylů — rozliší prázdnou stránku od vysvětlující. */
+function visibleTextLength(html: string): number {
+  const $doc = cheerio.load(html);
+  const body = $doc('body').clone();
+  body.find('script, style, noscript, template').remove();
+  return body.text().replace(/\s+/g, ' ').trim().length;
+}
+
+/** Porovnání adres bez ohledu na koncové lomítko — přesměrování na „/" i bez něj je stejný cíl. */
+function stripTrailingSlash(url: string): string {
+  return url.replace(/\/+$/, '');
+}
+
 /** Heuristika: prázdný root div a skoro žádný text = obsah nejspíš rendruje JavaScript. */
 function detectSpa($: cheerio.CheerioAPI, html: string): boolean {
   // Bez odstranění skriptů by inline JS (typicky __NEXT_DATA__) vypadal jako text
@@ -159,12 +174,18 @@ export async function POST(request: Request) {
   const $ = cheerio.load(page.html);
   const baseUrl = page.finalUrl || target;
 
-  const [robotsSettled, llmsSettled, sitemapSettled, linksSettled] = await Promise.allSettled([
-    fetchText(`${origin}/robots.txt`),
-    fetchText(`${origin}/llms.txt`),
-    fetchText(`${origin}/sitemap.xml`),
-    scanInternalLinks($, baseUrl, targetUrl.hostname),
-  ]);
+  // Náhodná cesta, o které si můžeme být jistí, že na webu neexistuje —
+  // odhalí „soft 404" (stav 200 nebo přesměrování místo skutečného 404).
+  const notFoundPath = `/audit-test-neexistujici-stranka-${Date.now().toString(36)}`;
+
+  const [robotsSettled, llmsSettled, sitemapSettled, linksSettled, notFoundSettled] =
+    await Promise.allSettled([
+      fetchText(`${origin}/robots.txt`),
+      fetchText(`${origin}/llms.txt`),
+      fetchText(`${origin}/sitemap.xml`),
+      scanInternalLinks($, baseUrl, targetUrl.hostname),
+      fetchPage(`${origin}${notFoundPath}`, 6000),
+    ]);
 
   const robotsResource = settled(robotsSettled, FAILED_RESOURCE);
   const llms = settled(llmsSettled, FAILED_RESOURCE);
@@ -175,6 +196,17 @@ export async function POST(request: Request) {
     broken: [],
     failed: true,
   } satisfies BrokenLinkScan);
+
+  const notFoundPage = notFoundSettled.status === 'fulfilled' ? notFoundSettled.value : null;
+  const notFound: NotFoundProbe =
+    notFoundPage && notFoundPage.status !== 0
+      ? {
+          checked: true,
+          status: notFoundPage.status,
+          textLength: visibleTextLength(notFoundPage.html),
+          redirectedToHome: stripTrailingSlash(notFoundPage.finalUrl) === stripTrailingSlash(baseUrl),
+        }
+      : { checked: false, status: null, textLength: 0, redirectedToHome: false };
 
   // robots.txt vrácený jako HTML fallback (běžné u SPA hostingů) není platný robots.txt.
   const robotsIsHtml = robotsResource.exists && /^\s*<(!doctype|html)/i.test(robotsResource.text);
@@ -225,6 +257,7 @@ export async function POST(request: Request) {
       psiDesktop,
       brokenLinks,
       faviconLive,
+      notFound,
     };
 
     const categories = [
@@ -244,6 +277,7 @@ export async function POST(request: Request) {
       buildCategory('aeo', 'AEO', t('Připravenost na odpovědi ve vyhledávání', 'Readiness for answer engines'), aeoChecks(ctx)),
       buildCategory('geo', 'GEO', t('Viditelnost pro generativní AI', 'Visibility for generative AI'), geoChecks(ctx)),
       buildCategory('tech', t('Správnost', 'Soundness'), t('Technický stav a spolehlivost', 'Technical health and reliability'), techChecks(ctx)),
+      buildCategory('a11y', t('Přístupnost', 'Accessibility'), t('Použitelnost pro klávesnici a čtečky obrazovky', 'Usability for keyboards and screen readers'), a11yChecks(ctx)),
     ];
 
     // Fatální nálezy: sesbírané z kontrol plus stav odpovědi, který kontrolou není.
