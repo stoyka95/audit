@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useLocale } from './LocaleProvider';
-import GoogleAnalytics from './GoogleAnalytics';
+import GoogleTagManager from './GoogleTagManager';
 
 type Consent = 'unset' | 'accepted' | 'rejected';
 
@@ -21,7 +21,7 @@ function readConsent(): Consent {
 }
 
 /**
- * Souhlas je defaultně "unset" — dokud návštěvník nerozhodne, Google Analytics
+ * Souhlas je defaultně "unset" — dokud návštěvník nerozhodne, Tag Manager
  * se vůbec nenačte (opt-in, ne opt-out se sledováním předem).
  */
 export default function CookieConsent() {
@@ -51,7 +51,7 @@ export default function CookieConsent() {
 
   return (
     <>
-      {consent === 'accepted' ? <GoogleAnalytics /> : null}
+      {consent === 'accepted' ? <GoogleTagManager /> : null}
 
       {visible ? (
         <div className="fixed inset-x-3 bottom-3 z-[60] sm:inset-x-auto sm:bottom-4 sm:right-4 sm:max-w-sm">

@@ -377,7 +377,7 @@ const cs = {
   },
 
   cookie: {
-    text: 'Používáme volitelnou Google Analytics, abychom viděli, jak si audit vede. Bez souhlasu se nic neukládá a analytika se vůbec nenačte.',
+    text: 'Používáme volitelnou analytiku (Google Tag Manager), abychom viděli, jak si audit vede. Bez souhlasu se nic neukládá a analytika se vůbec nenačte.',
     accept: 'Přijmout',
     reject: 'Odmítnout',
   },
@@ -761,7 +761,7 @@ const en: UiDict = {
   },
 
   cookie: {
-    text: 'We use optional Google Analytics to see how the audit is doing. Nothing is stored without consent, and analytics never loads without it.',
+    text: 'We use optional analytics (Google Tag Manager) to see how the audit is doing. Nothing is stored without consent, and analytics never loads without it.',
     accept: 'Accept',
     reject: 'Reject',
   },
