@@ -83,6 +83,16 @@ export default function SiteFooter() {
             <p>{t.footer.noteLeft}</p>
             <p>{t.footer.noteRight}</p>
           </div>
+
+          <div>
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new Event('cookie-consent:open'))}
+              className="text-[0.72rem] text-bone-faint underline-offset-2 transition-colors hover:text-bone hover:underline"
+            >
+              {t.footer.cookieSettings}
+            </button>
+          </div>
         </div>
       </div>
     </footer>

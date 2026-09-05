@@ -373,6 +373,13 @@ const cs = {
     noteRight: 'Měřeno pro mobil i pro počítač · data z Googlu se mohou mezi běhy lišit.',
     credit: 'Vytvořil a provozuje Semakod',
     copyright: '© 2026 Semakod · Mykola Stoyka · IČO 01796763',
+    cookieSettings: 'Nastavení cookies',
+  },
+
+  cookie: {
+    text: 'Používáme volitelnou Google Analytics, abychom viděli, jak si audit vede. Bez souhlasu se nic neukládá a analytika se vůbec nenačte.',
+    accept: 'Přijmout',
+    reject: 'Odmítnout',
   },
 
   errors: {
@@ -750,6 +757,13 @@ const en: UiDict = {
     noteRight: 'Measured for mobile and desktop · Google’s data can differ between runs.',
     credit: 'Built and run by Semakod',
     copyright: '© 2026 Semakod · Mykola Stoyka · IČO 01796763',
+    cookieSettings: 'Cookie settings',
+  },
+
+  cookie: {
+    text: 'We use optional Google Analytics to see how the audit is doing. Nothing is stored without consent, and analytics never loads without it.',
+    accept: 'Accept',
+    reject: 'Reject',
   },
 
   errors: {

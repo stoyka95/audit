@@ -3,6 +3,7 @@ import { DM_Sans, Outfit } from 'next/font/google';
 import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import './globals.css';
+import CookieConsent from '@/components/CookieConsent';
 import LocaleProvider from '@/components/LocaleProvider';
 
 const dmSans = DM_Sans({
@@ -147,6 +148,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="ambient grain min-h-screen">
         <LocaleProvider>
           <div className="relative z-[2]">{children}</div>
+          <CookieConsent />
         </LocaleProvider>
         <Analytics />
         <SpeedInsights />
