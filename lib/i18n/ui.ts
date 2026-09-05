@@ -328,10 +328,19 @@ const cs = {
     /** %s = auditovaná adresa */
     docTitle: 'Audit webu — %s',
     print: 'Uložit jako PDF',
-    printHint: 'V dialogu tisku zvolte cíl „Uložit jako PDF“.',
+    printHint:
+      'V dialogu tisku zvolte cíl „Uložit jako PDF“ a vypněte volbu Záhlaví a zápatí — ' +
+      'jinak prohlížeč dotiskne na každou stránku datum a adresu.',
     subtitle: 'Rychlost, SEO, AEO, GEO a technický stav',
+    eyebrow: 'Výsledek auditu',
     generated: 'Vytvořeno',
     overall: 'Celkové skóre',
+    summary: {
+      fail: 'Chybí',
+      warn: 'Ke zlepšení',
+      pass: 'V pořádku',
+      note: 'Z bodovaných kontrol',
+    },
     categories: 'Skóre kategorií',
     blockers: 'Fatální nálezy',
     recommendations: 'Doporučení',
@@ -890,10 +899,19 @@ const en: UiDict = {
     button: 'Save as PDF',
     docTitle: 'Site audit — %s',
     print: 'Save as PDF',
-    printHint: 'In the print dialog pick “Save as PDF” as the destination.',
+    printHint:
+      'In the print dialog pick “Save as PDF” as the destination and turn off Headers and footers — ' +
+      'otherwise the browser prints the date and the address onto every page.',
     subtitle: 'Speed, SEO, AEO, GEO and technical health',
+    eyebrow: 'Audit result',
     generated: 'Created',
     overall: 'Overall score',
+    summary: {
+      fail: 'Missing',
+      warn: 'Could be better',
+      pass: 'Fine',
+      note: 'Of the scored checks',
+    },
     categories: 'Category scores',
     blockers: 'Fatal findings',
     recommendations: 'Recommendations',

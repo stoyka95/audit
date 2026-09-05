@@ -1,5 +1,5 @@
 import { ImageResponse } from 'next/og';
-import { BRAND_LOGO_DATA_URI } from '@/lib/brandLogo';
+import { brandLogoDataUri } from '@/lib/brandLogo';
 
 export const runtime = 'edge';
 export const size = { width: 1200, height: 630 };
@@ -23,7 +23,7 @@ export default function OpengraphImage() {
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={BRAND_LOGO_DATA_URI} width={48} height={48} alt="" />
+          <img src={brandLogoDataUri()} width={48} height={48} alt="" />
           <div style={{ fontSize: 28, fontWeight: 600, letterSpacing: '-0.02em' }}>Audit webu</div>
         </div>
 

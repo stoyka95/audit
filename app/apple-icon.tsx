@@ -1,5 +1,5 @@
 import { ImageResponse } from 'next/og';
-import { BRAND_LOGO_DATA_URI } from '@/lib/brandLogo';
+import { brandLogoDataUri } from '@/lib/brandLogo';
 
 export const runtime = 'edge';
 export const size = { width: 180, height: 180 };
@@ -19,7 +19,7 @@ export default function AppleIcon() {
         }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={BRAND_LOGO_DATA_URI} width={128} height={128} alt="" />
+        <img src={brandLogoDataUri()} width={128} height={128} alt="" />
       </div>
     ),
     { ...size },
