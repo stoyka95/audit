@@ -1,0 +1,26 @@
+node_modules
+.next
+out
+build
+.DS_Store
+*.pem
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+.env
+.env*.local
+
+# Klíče uložené mimo .env — ať se omylem nedostanou do repozitáře
+api-key-*.txt
+*.key
+
+.vercel
+next-env.d.ts
+*.tsbuildinfo
+
+# lokální log auditů
+logs/
+*.jsonl
