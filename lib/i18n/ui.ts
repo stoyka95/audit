@@ -387,6 +387,15 @@ const cs = {
     networkDetail: 'Zkontrolujte připojení a zkuste audit spustit znovu.',
     generic: 'Audit se nepodařilo dokončit.',
   },
+
+  notFound: {
+    code: '404',
+    title: 'Tahle stránka neexistuje.',
+    text: 'Adresa buď nikdy nebyla, nebo se přesunula jinam. Zkuste spustit audit, nebo se podívejte, co dělá Semakod.',
+    backHome: 'Zpět na audit',
+    visitSemakod: 'Navštívit semakod.cz',
+    browseServices: 'Prohlédnout služby',
+  },
 };
 
 export type UiDict = typeof cs;
@@ -770,6 +779,15 @@ const en: UiDict = {
     network: 'Could not reach the server.',
     networkDetail: 'Check your connection and try running the audit again.',
     generic: 'The audit could not be completed.',
+  },
+
+  notFound: {
+    code: '404',
+    title: 'This page does not exist.',
+    text: 'The address either never existed or has moved. Try running an audit, or take a look at what Semakod does.',
+    backHome: 'Back to the audit',
+    visitSemakod: 'Visit semakod.cz',
+    browseServices: 'Browse services',
   },
 };
 
