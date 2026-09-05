@@ -111,8 +111,14 @@ export default function CheckRow({ check }: { check: CheckResult }) {
     kategorie, které lidé znají odjinud (z PageSpeedu, z Lighthouse), a mezi
     ostatními řádky zanikalo. Dostane proto barevný podklad a hodnotu vysázenou
     velkým písmem místo drobného štítku.
+
+    Displejové písmo ale platí jen pro skutečné číslo („62/100"). Když měření
+    nedoběhne, je hodnotou věta („nepodařilo se ověřit") — ta se do displeje
+    nevejde a přetekla by přes popisek, takže se řádek vykreslí jako běžný.
   */
-  if (check.featured) {
+  const scoreValue = check.featured ? /^(\d+)(?:\/(\d+))?$/.exec(check.value ?? '') : null;
+
+  if (scoreValue) {
     return (
       <li className="hairline first:border-t-0">
         <button
@@ -138,20 +144,18 @@ export default function CheckRow({ check }: { check: CheckResult }) {
             </span>
           </span>
 
-          {check.value ? (
-            <span className="shrink-0 text-right">
-              <span
-                className={`font-display text-3xl font-semibold leading-none tracking-tight tnum sm:text-4xl ${style.text}`}
-              >
-                {check.value.split('/')[0]}
-              </span>
-              {check.value.includes('/') ? (
-                <span className="ml-0.5 text-[0.8rem] font-medium text-bone-faint tnum">
-                  /{check.value.split('/')[1]}
-                </span>
-              ) : null}
+          <span className="shrink-0 text-right">
+            <span
+              className={`font-display text-3xl font-semibold leading-none tracking-tight tnum sm:text-4xl ${style.text}`}
+            >
+              {scoreValue[1]}
             </span>
-          ) : null}
+            {scoreValue[2] ? (
+              <span className="ml-0.5 text-[0.8rem] font-medium text-bone-faint tnum">
+                /{scoreValue[2]}
+              </span>
+            ) : null}
+          </span>
 
           <span
             aria-hidden="true"
