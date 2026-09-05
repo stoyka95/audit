@@ -33,9 +33,19 @@ export function sectionLabel(t: UiDict, id: SectionId): string {
   }
 }
 
+/**
+ * Logo vede na kořen webu, ne na kotvu `#audit`. Klik na značku je zavedené
+ * „vrať mě na začátek": stránka se načte znovu, hotový report zmizí a formulář
+ * je prázdný. Kotva by jen odrolovala nahoru a nechala starý výsledek na místě.
+ *
+ * Zvolený jazyk se veze v adrese, aby se anglická verze po načtení nepřeklopila.
+ */
 function Logo({ label, aria }: { label: string; aria: string }) {
+  const { locale } = useLocale();
+  const href = locale === 'cs' ? '/' : `/?lang=${locale}`;
+
   return (
-    <a href="#audit" className="flex shrink-0 items-center gap-2.5" aria-label={aria}>
+    <a href={href} className="flex shrink-0 items-center gap-2.5" aria-label={aria}>
       <BrandLogo className="h-7 w-7 shrink-0" />
       <span className="font-display text-[0.95rem] font-semibold tracking-tight text-bone">{label}</span>
     </a>
