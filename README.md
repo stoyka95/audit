@@ -51,14 +51,31 @@ npm run typecheck
 
 ## Deploy na Vercel (Hobby plán, zdarma)
 
+Repozitář je na GitHubu ([stoyka95/audit](https://github.com/stoyka95/audit)) a propojený s Vercel projektem
+`audit` (tým `stoyka95s-projects`) — každý push do `main` se nasadí automaticky.
+
 1. Nahrajte repozitář na GitHub.
 2. Na <https://vercel.com/new> repozitář importujte. Next.js se detekuje automaticky, žádné build nastavení není potřeba měnit.
-3. *(Volitelné)* V **Project Settings → Environment Variables** přidejte `GOOGLE_PAGESPEED_API_KEY` pro prostředí Production i Preview.
+3. V **Project Settings → Environment Variables** přidejte `GOOGLE_PAGESPEED_API_KEY` (vlastní klíč místo toho v `api-key-pagespeed.txt`) pro prostředí Production i Preview.
 4. Klikněte na **Deploy**.
 
 API route má `export const maxDuration = 60`, protože volání PageSpeed Insights často přesáhne výchozích 10 sekund. Na Hobby plánu to funguje díky Fluid Compute — pokud by se deploy vzpíral, zapněte **Settings → Functions → Fluid Compute**.
 
 Po změně environment proměnné je potřeba projekt znovu nasadit, aby se změna projevila.
+
+### Vlastní doména audit.semakod.cz
+
+DNS pro `semakod.cz` běží na Hukotu (`ns1.hukot.cz` / `ns3.hukot.cz`), appka samotná ale běží na
+Vercelu — Hukot je klasický PHP/sdílený webhosting bez podpory Node.js, takže tam Next.js s API
+routami neběží. Doména `semakod.cz` na Hukotu zůstává beze změny, mění se jen DNS záznam pro
+subdoménu `audit`:
+
+1. Ve Vercelu: **Project → Settings → Domains** → přidat `audit.semakod.cz`. Vercel ukáže přesnou
+   cílovou hodnotu pro CNAME (obvykle `cname.vercel-dns.com`).
+2. V DNS správě domény na Hukotu (`cloud.hukot.net`) přidat záznam:
+   `CNAME audit → cname.vercel-dns.com` (hodnotu vzít přesně z kroku 1).
+3. Počkat na propagaci DNS (obvykle minuty, může to trvat i pár hodin) — Vercel doménu automaticky
+   ověří a vydá HTTPS certifikát.
 
 ## Jazyky
 
