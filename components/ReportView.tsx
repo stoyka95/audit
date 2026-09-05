@@ -295,11 +295,17 @@ export default function ReportView({ result, onReset, onRetrySpeed, retrying }: 
       ) : null}
 
       {/* Kategorie */}
-      <div className="mt-4 grid gap-4 lg:grid-cols-2">
+      {/* Sloupcové rozložení místo grid řádků: karty mají různě dlouhý obsah
+          (SEO má přes dvacet kontrol, AEO jich má pár) a grid by nižší kartu
+          natáhl na výšku sousední, aby zůstaly zarovnané do řádku. Takhle
+          každá karta zabere jen svou výšku a další pokračuje hned pod ní. */}
+      <div className="mt-4 columns-1 gap-4 lg:columns-2">
         {result.categories.map((category, index) => (
           // Karty jsou po dokončení auditu rozbalené. Report je výsledek, ne rozcestník —
           // rozklikávat každou kategorii zvlášť, aby člověk zjistil, co konkrétně nesedí, byla otrava.
-          <CategoryCard key={category.id} category={category} index={index} defaultOpen />
+          <div key={category.id} className="mb-4 break-inside-avoid">
+            <CategoryCard category={category} index={index} defaultOpen />
+          </div>
         ))}
       </div>
     </div>
