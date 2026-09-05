@@ -7,6 +7,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: new Date(),
       changeFrequency: 'monthly',
       priority: 1,
+      alternates: {
+        languages: {
+          cs: 'https://audit.semakod.cz/?lang=cs',
+          en: 'https://audit.semakod.cz/?lang=en',
+        },
+      },
     },
   ];
 }

@@ -10,6 +10,7 @@ import SiteFooter from '@/components/SiteFooter';
 import SectionHeading from '@/components/SectionHeading';
 import Reveal from '@/components/Reveal';
 import Faq from '@/components/Faq';
+import FaqJsonLd from '@/components/FaqJsonLd';
 import { useLocale } from '@/components/LocaleProvider';
 import { applyBlockerCap, auditConfidence, overallScore, unscoredNote } from '@/lib/scoring';
 import type { Locale } from '@/lib/i18n';
@@ -614,6 +615,7 @@ export default function Home() {
           </Reveal>
 
           <Faq />
+          <FaqJsonLd />
 
           {/* Závěrečná výzva */}
           <Reveal delay={80}>
