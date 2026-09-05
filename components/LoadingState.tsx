@@ -162,9 +162,11 @@ export default function LoadingState({ url, steps }: { url: string; steps: LoadS
           </div>
         </div>
 
-        {/* Časovač. Čekání je dlouhé, tak ať je aspoň vidět, že se počítá. */}
-        <div className="hairline mt-6 flex flex-wrap items-end justify-between gap-x-6 gap-y-3 pt-5">
-          <p className="flex items-end gap-2" role="timer" aria-live="off">
+        {/* Časovač. Čekání je dlouhé, tak ať je aspoň vidět, že se počítá.
+            Mřížka na dva sloupce místo `justify-between`: číslo tak sedí
+            uprostřed své poloviny, ne zaražené v levém rohu vedle prázdna. */}
+        <div className="hairline mt-6 grid gap-5 pt-5 sm:grid-cols-2 sm:items-center sm:gap-8">
+          <p className="flex items-end justify-center gap-2" role="timer" aria-live="off">
             <span className="brand-text font-display text-[3.4rem] font-semibold leading-[0.85] tracking-tightest tnum sm:text-[4.2rem]">
               {Math.floor(elapsed / 1000)}
             </span>
@@ -173,7 +175,7 @@ export default function LoadingState({ url, steps }: { url: string; steps: LoadS
               {t.loading.elapsed}
             </span>
           </p>
-          <p className="max-w-xs pb-1 text-[0.76rem] leading-relaxed text-bone-faint">
+          <p className="max-w-xs text-[0.76rem] leading-relaxed text-bone-faint sm:justify-self-end">
             {t.loading.hint.before}
             <span className="text-bone-dim">{t.loading.hint.fast}</span>
             {t.loading.hint.after}
