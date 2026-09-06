@@ -17,6 +17,7 @@ import { applyBlockerCap, auditConfidence, overallScore, unscoredNote } from '@/
 import type { Locale } from '@/lib/i18n';
 import { ui, type UiDict } from '@/lib/i18n/ui';
 import { formatBytes, formatMs, formatSeconds } from '@/lib/format';
+import { pushDataLayerEvent, safeHostname } from '@/lib/analytics';
 import type {
   AuditPayload,
   AuditResult,
@@ -320,6 +321,7 @@ export default function Home() {
         setPageStep({ state: 'failed' });
         setError({ message: payload?.error ?? t.errors.generic, detail: payload?.detail });
         setPhase('error');
+        pushDataLayerEvent('audit_failed', { audit_reason: 'response' });
         return;
       }
 
@@ -328,6 +330,7 @@ export default function Home() {
       setPageStep({ state: 'failed' });
       setError({ message: t.errors.network, detail: t.errors.networkDetail });
       setPhase('error');
+      pushDataLayerEvent('audit_failed', { audit_reason: 'network' });
       return;
     }
 
@@ -360,6 +363,7 @@ export default function Home() {
 
     applyOutcomes();
     setPhase('done');
+    pushDataLayerEvent('audit_completed', { audit_host: safeHostname(audit.url) });
   };
 
   /**
