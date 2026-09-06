@@ -10,6 +10,7 @@ import SiteFooter from '@/components/SiteFooter';
 import SectionHeading from '@/components/SectionHeading';
 import Reveal from '@/components/Reveal';
 import Faq from '@/components/Faq';
+import LeadModal from '@/components/LeadModal';
 import GoogleWord from '@/components/GoogleWord';
 import FaqJsonLd from '@/components/FaqJsonLd';
 import { useLocale } from '@/components/LocaleProvider';
@@ -207,6 +208,7 @@ export default function Home() {
   /** Průběh hlavního auditu a obou rychlostních měření pro čekací obrazovku. */
   const [pageStep, setPageStep] = useState<{ state: StepState; note?: string }>({ state: 'waiting' });
   const [speed, setSpeed] = useState<Record<PsiStrategy, SpeedProgress>>(SPEED_IDLE);
+  const [leadModalTrigger, setLeadModalTrigger] = useState(0);
 
   /**
    * Začátek celého čekání. Server zná jen dobu svého požadavku, ale uživatel
@@ -364,6 +366,7 @@ export default function Home() {
     applyOutcomes();
     setPhase('done');
     pushDataLayerEvent('audit_completed', { audit_host: safeHostname(audit.url) });
+    setLeadModalTrigger((n) => n + 1);
   };
 
   /**
@@ -428,6 +431,7 @@ export default function Home() {
     <>
       <AmbientPattern busy={phase === 'running'} />
       <SiteNav />
+      <LeadModal trigger={leadModalTrigger} />
 
       <main className="mx-auto w-full max-w-5xl px-4 pb-4 sm:px-6">
         {/* ---------- Audit ---------- */}
@@ -467,18 +471,18 @@ export default function Home() {
 
               {/* Rychlý přehled kategorií */}
               <div
-                className="mt-14 grid animate-fade-up gap-3 text-left sm:grid-cols-3 lg:grid-cols-5"
+                className="mt-14 grid animate-fade-up gap-4 text-left sm:grid-cols-2 lg:grid-cols-3"
                 style={{ animationDelay: '160ms' }}
               >
                 {t.categories.map((category) => (
-                  <div key={category.title} className="panel panel-hover p-4">
+                  <div key={category.title} className="panel panel-hover p-5">
                     <div className="flex items-baseline justify-between gap-2">
-                      <h2 className="font-display text-lg font-semibold leading-none tracking-tight text-bone">
+                      <h2 className="font-display text-xl font-semibold leading-none tracking-tight text-bone">
                         {category.title}
                       </h2>
-                      <span className="text-[0.65rem] font-medium text-bone-faint tnum">{category.weight}</span>
+                      <span className="text-[0.7rem] font-medium text-bone-faint tnum">{category.weight}</span>
                     </div>
-                    <p className="mt-2 text-[0.73rem] leading-relaxed text-bone-faint">{category.description}</p>
+                    <p className="mt-2.5 text-[0.78rem] leading-relaxed text-bone-faint">{category.description}</p>
                   </div>
                 ))}
               </div>

@@ -441,6 +441,18 @@ const cs = {
     cookieSettings: 'Nastavení cookies',
   },
 
+  leadModal: {
+    eyebrow: 'Plánujete něco většího?',
+    title: 'Nový web, nebo přestavba stávajícího?',
+    lead:
+      'Napište nám na e-mail níže a probereme, jak by měl váš web vypadat a fungovat — ' +
+      's ohledem na výsledky, které jste právě viděli.',
+    email: 'ahoj@semakod.cz',
+    cta: 'Napsat na ahoj@semakod.cz',
+    neverShow: 'Příště nezobrazovat',
+    close: 'Zavřít okno',
+  },
+
   cookie: {
     /* ---------- lišta ---------- */
     aria: 'Souhlas s cookies',
@@ -1031,6 +1043,18 @@ const en: UiDict = {
     credit: 'Built and run by Semakod',
     copyright: '© 2026 Semakod · Mykola Stoyka · IČO 01796763',
     cookieSettings: 'Cookie settings',
+  },
+
+  leadModal: {
+    eyebrow: 'Planning something bigger?',
+    title: 'New site, or a redesign of your current one?',
+    lead:
+      'Drop us an email and we can talk through how your site should look and work — ' +
+      'with the results you just saw in mind.',
+    email: 'ahoj@semakod.cz',
+    cta: 'Email ahoj@semakod.cz',
+    neverShow: "Don't show this again",
+    close: 'Close window',
   },
 
   cookie: {
